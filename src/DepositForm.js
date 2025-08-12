@@ -3,7 +3,9 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useDispatch, useSelector } from 'react-redux';
 import { addDeposit, updateDeposit } from './slices/depositsSlice';
-import { TextField, Button, Stack, Paper, Autocomplete } from '@mui/material';
+import { Stack, Paper, Button } from '@mui/material';
+import LabeledTextField from './components/LabeledTextField';
+import LabeledAutocomplete from './components/LabeledAutocomplete';
 
 const initialState = {
     bank: '',
@@ -19,6 +21,13 @@ const initialState = {
     term: '',
 };
 
+/**
+* DepositForm component for adding or editing a deposit.
+* @param {Object} props - Component props
+* @param {Object} [props.deposit] - Deposit data for editing
+* @param {string} props.srNo - Serial number for the deposit
+* @param {Function} [props.onSuccess] - Callback function to execute on successful add/edit
+*/
 function DepositForm({ deposit, srNo, onSuccess }) {
     const { items } = useSelector(state => state.deposits);
     // Extract unique values for dropdowns
@@ -43,14 +52,27 @@ function DepositForm({ deposit, srNo, onSuccess }) {
     const dispatch = useDispatch();
     const isEdit = !!deposit;
 
+    /**
+     * Handles form field changes.
+     * @param {Object} e - Event object
+     */
     const handleChange = e => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
+    /**
+     * Handles autocomplete value changes.
+     * @param {string} name - Field name
+     * @param {string} value - New value
+     */
     const handleAutoChange = (name, value) => {
         setForm({ ...form, [name]: value });
     };
 
+    /**
+     * Handles form submission.
+     * @param {Object} e - Event object
+     */
     const handleSubmit = e => {
         e.preventDefault();
         // Basic validation
@@ -82,194 +104,90 @@ function DepositForm({ deposit, srNo, onSuccess }) {
             }}>
                 <form onSubmit={handleSubmit}>
                     <Stack direction="column" spacing={2} alignItems="stretch">
-                        <Autocomplete
-                            freeSolo
-                            options={branchOptions}
+                        <LabeledAutocomplete
+                            label="Branch"
+                            name="branch"
                             value={form.branch}
-                            onInputChange={(e, v) => handleAutoChange('branch', v)}
-                            renderInput={(params) => (
-                                <TextField {...params} name="branch" label="Branch" required size="small" fullWidth
-                                    InputLabelProps={{
-                                        style: {
-                                            color: '#222',
-                                            fontWeight: 500,
-                                            letterSpacing: 0.2,
-                                        }
-                                    }}
-                                    inputProps={{
-                                        ...params.inputProps,
-                                        style: {
-                                            color: '#222',
-                                            background: '#fff',
-                                            borderRadius: 4,
-                                        }
-                                    }}
-                                />
-                            )}
+                            onChange={handleAutoChange}
+                            options={branchOptions}
+                            required
                         />
-                        <Autocomplete
-                            freeSolo
-                            options={personOptions}
+                        <LabeledAutocomplete
+                            label="Person"
+                            name="person"
                             value={form.person}
-                            onInputChange={(e, v) => handleAutoChange('person', v)}
-                            renderInput={(params) => (
-                                <TextField {...params} name="person" label="Person" required size="small" fullWidth
-                                    InputLabelProps={{
-                                        style: {
-                                            color: '#222',
-                                            fontWeight: 500,
-                                            letterSpacing: 0.2,
-                                        }
-                                    }}
-                                    inputProps={{
-                                        ...params.inputProps,
-                                        style: {
-                                            color: '#222',
-                                            background: '#fff',
-                                            borderRadius: 4,
-                                        }
-                                    }}
-                                />
-                            )}
+                            onChange={handleAutoChange}
+                            options={personOptions}
+                            required
                         />
-                        <Autocomplete
-                            freeSolo
-                            options={bankOptions}
+                        <LabeledAutocomplete
+                            label="Bank"
+                            name="bank"
                             value={form.bank}
-                            onInputChange={(e, v) => handleAutoChange('bank', v)}
-                            renderInput={(params) => (
-                                <TextField {...params} name="bank" label="Bank" required size="small" fullWidth
-                                    InputLabelProps={{
-                                        style: {
-                                            color: '#222',
-                                            fontWeight: 500,
-                                            letterSpacing: 0.2,
-                                        }
-                                    }}
-                                    inputProps={{
-                                        ...params.inputProps,
-                                        style: {
-                                            color: '#222',
-                                            background: '#fff',
-                                            borderRadius: 4,
-                                        }
-                                    }}
-                                />
-                            )}
+                            onChange={handleAutoChange}
+                            options={bankOptions}
+                            required
                         />
-                        <TextField name="principal" label="Principal" value={form.principal} onChange={handleChange} required type="number" size="small" fullWidth
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Principal"
+                            name="principal"
+                            value={form.principal}
+                            onChange={handleChange}
+                            required
+                            type="number"
                         />
-                        <TextField name="interest" label="Interest" value={form.interest} onChange={handleChange} required type="number" size="small" fullWidth
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Interest"
+                            name="interest"
+                            value={form.interest}
+                            onChange={handleChange}
+                            required
+                            type="number"
                         />
-                        <TextField name="beforeTds" label="Before TDS" value={form.beforeTds} onChange={handleChange} required type="number" size="small" fullWidth
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Before TDS"
+                            name="beforeTds"
+                            value={form.beforeTds}
+                            onChange={handleChange}
+                            required
+                            type="number"
                         />
-                        <TextField name="valueDate" label="Value Date" value={form.valueDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true, style: { color: '#222', fontWeight: 500, letterSpacing: 0.2 } }} fullWidth
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Value Date"
+                            name="valueDate"
+                            value={form.valueDate}
+                            onChange={handleChange}
+                            type="date"
+                            InputLabelProps={{ shrink: true }}
                         />
-                        <TextField name="maturityDate" label="Maturity Date" value={form.maturityDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true, style: { color: '#222', fontWeight: 500, letterSpacing: 0.2 } }} fullWidth
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Maturity Date"
+                            name="maturityDate"
+                            value={form.maturityDate}
+                            onChange={handleChange}
+                            type="date"
+                            InputLabelProps={{ shrink: true }}
                         />
-                        <TextField name="accountNo" label="Account No" value={form.accountNo} onChange={handleChange} required size="small" fullWidth
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Account No"
+                            name="accountNo"
+                            value={form.accountNo}
+                            onChange={handleChange}
+                            required
                         />
-                        <TextField name="srNo" label="Sr No" value={form.srNo} required size="small" fullWidth InputProps={{ readOnly: true }}
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Sr No"
+                            name="srNo"
+                            value={form.srNo}
+                            required
+                            InputProps={{ readOnly: true }}
                         />
-                        <TextField name="term" label="Term" value={form.term} onChange={handleChange} required size="small" fullWidth
-                            InputLabelProps={{
-                                style: {
-                                    color: '#222',
-                                    fontWeight: 500,
-                                    letterSpacing: 0.2,
-                                }
-                            }}
-                            inputProps={{
-                                style: {
-                                    color: '#222',
-                                    background: '#fff',
-                                    borderRadius: 4,
-                                }
-                            }}
+                        <LabeledTextField
+                            label="Term"
+                            name="term"
+                            value={form.term}
+                            onChange={handleChange}
+                            required
                         />
                         <Button type="submit" variant={isEdit ? 'outlined' : 'contained'} color={isEdit ? 'primary' : 'success'} size="large" sx={{ minWidth: 120, alignSelf: 'center', mt: 2, background: '#635bff', color: '#fff', fontWeight: 700, letterSpacing: 0.5 }}>{isEdit ? 'Update' : 'Add'}</Button>
                     </Stack>
