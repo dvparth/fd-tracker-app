@@ -10,6 +10,12 @@ import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import Switch from '@mui/material/Switch';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import Slide from '@mui/material/Slide';
+import Snackbar from '@mui/material/Snackbar';
 import './index.css';
 
 function App({ themeMode, setThemeMode }) {
@@ -20,6 +26,8 @@ function App({ themeMode, setThemeMode }) {
     const { items, status, error } = useSelector(state => state.deposits);
     const [editDeposit, setEditDeposit] = useState(null);
     const [addOpen, setAddOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     // Handler functions
     const handleEditOpen = (deposit) => setEditDeposit(deposit);
@@ -27,6 +35,15 @@ function App({ themeMode, setThemeMode }) {
     const handleAddOpen = () => setAddOpen(true);
     const handleAddClose = () => setAddOpen(false);
     const handleRefresh = () => dispatch(fetchDeposits());
+    const handleDelete = (row) => setDeleteTarget(row);
+    const handleDeleteConfirm = () => {
+        if (deleteTarget) {
+            dispatch(deleteDeposit(deleteTarget._id));
+            setDeleteTarget(null);
+            setSnackbar({ open: true, message: 'Deposit deleted successfully!', severity: 'success' });
+        }
+    };
+    const handleDeleteCancel = () => setDeleteTarget(null);
 
     // DataGrid columns
     const columns = [
@@ -56,7 +73,7 @@ function App({ themeMode, setThemeMode }) {
                     <IconButton onClick={() => handleEditOpen(params.row)} size="small" color="primary">
                         <EditIcon />
                     </IconButton>
-                    <IconButton onClick={() => dispatch(deleteDeposit(params.row._id))} size="small" color="error">
+                    <IconButton onClick={() => handleDelete(params.row)} size="small" color="error">
                         <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>&#128465;</span>
                     </IconButton>
                 </Stack>
@@ -71,48 +88,52 @@ function App({ themeMode, setThemeMode }) {
     }));
 
     return (
-        <div>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mt: 2, px: 2 }}>
-                <Typography variant="h4" fontWeight={700} sx={{ color: '#635bff' }}>Deposit Tracker</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <div style={{ minHeight: '100vh', background: themeMode === 'dark' ? '#18181b' : '#f6fafd' }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2, mt: 2, px: { xs: 1, sm: 2 } }}>
+                <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', fontSize: { xs: '1.3rem', sm: '2rem' } }}>Deposit Tracker</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: { xs: 2, sm: 0 } }}>
                     <Switch
                         checked={themeMode === 'dark'}
                         onChange={e => setThemeMode(e.target.checked ? 'dark' : 'light')}
                         inputProps={{ 'aria-label': 'toggle dark mode' }}
+                        sx={{ mr: 1 }}
                     />
-                    <span style={{ color: '#635bff', fontWeight: 500 }}>Dark Mode</span>
-                    <button onClick={handleAddOpen} style={{ padding: '8px 20px', background: '#635bff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 2px 8px #635bff22' }}>
-                        + Add Deposit
+                    <span style={{ color: '#635bff', fontWeight: 500, fontSize: '1rem' }}>Dark Mode</span>
+                    <button onClick={handleAddOpen} style={{ padding: '8px 16px', background: '#635bff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 2px 8px #635bff22', marginLeft: 8 }}>
+                        + Add
                     </button>
                 </Box>
             </Box>
-            <Box sx={{ height: 600, width: '98vw', maxWidth: '1800px', mx: 'auto', px: 2, background: '#fff', borderRadius: 2, boxShadow: 2, mt: 2 }}>
+            <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    pageSize={25}
-                    rowsPerPageOptions={[25, 50, 100]}
+                    pageSize={10}
+                    rowsPerPageOptions={[10, 25, 50]}
                     disableSelectionOnClick
                     autoHeight={false}
                     sx={{
-                        fontSize: '0.90rem',
+                        fontSize: { xs: '0.85rem', sm: '0.90rem' },
                         '& .MuiDataGrid-row': {
                             cursor: 'pointer',
-                            minHeight: '28px',
-                            maxHeight: '28px',
+                            minHeight: { xs: '24px', sm: '28px' },
+                            maxHeight: { xs: '24px', sm: '28px' },
+                            transition: 'background 0.3s, box-shadow 0.3s',
                         },
                         '& .MuiDataGrid-cell': {
-                            padding: '2px 6px',
-                            fontSize: '0.90rem',
+                            padding: { xs: '2px 2px', sm: '2px 6px' },
+                            fontSize: { xs: '0.85rem', sm: '0.90rem' },
+                            transition: 'color 0.3s',
                         },
                         '& .MuiDataGrid-columnHeaders': {
                             background: '#f6fafd',
                             fontWeight: 700,
-                            minHeight: '32px',
-                            maxHeight: '32px',
+                            minHeight: { xs: '28px', sm: '32px' },
+                            maxHeight: { xs: '28px', sm: '32px' },
                         },
                         '& .MuiDataGrid-row:hover': {
                             background: '#e3e8ff',
+                            boxShadow: '0 2px 8px #635bff22',
                         },
                         '& .editing-row': {
                             background: '#ffe3e3 !important',
@@ -202,6 +223,30 @@ function App({ themeMode, setThemeMode }) {
                     </Box>
                 </Box>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteTarget} onClose={handleDeleteCancel} TransitionComponent={Slide} TransitionProps={{ direction: 'up' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, minWidth: 340 }}>
+                    <WarningAmberIcon color="warning" sx={{ fontSize: 48, mb: 1 }} />
+                    <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, color: '#d97706', mb: 1 }}>Delete Deposit?</DialogTitle>
+                    <Typography sx={{ mb: 2, color: '#555', textAlign: 'center' }}>
+                        Are you sure you want to delete this deposit? This action cannot be undone.
+                    </Typography>
+                    <DialogActions sx={{ justifyContent: 'center', gap: 2 }}>
+                        <Button onClick={handleDeleteCancel} color="primary" variant="outlined">Cancel</Button>
+                        <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={2500}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                TransitionComponent={Slide}
+                message={snackbar.message}
+                ContentProps={{ sx: { fontWeight: 600, color: snackbar.severity === 'success' ? '#388e3c' : '#d32f2f', background: '#fff', border: '1px solid #e3e8ff', boxShadow: 2 } }}
+            />
 
             {/* Simple Footer */}
             <footer style={{ textAlign: 'center', margin: '48px 0 16px 0', color: '#888', fontSize: '1rem' }}>
