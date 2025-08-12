@@ -171,12 +171,20 @@ function App() {
                             padding: { xs: '2px 2px', sm: '2px 6px' },
                             fontSize: { xs: '0.85rem', sm: '0.90rem' },
                             transition: 'color 0.3s',
+                            border: '1px solid #e0e0e0',
+                            borderColor: darkMode ? '#444' : '#e0e0e0',
                         },
                         '& .MuiDataGrid-columnHeaders': {
                             background: darkMode ? '#18181b' : '#f6fafd',
+                            color: darkMode ? '#aab4ff' : '#23234a',
                             fontWeight: 700,
                             minHeight: { xs: '28px', sm: '32px' },
                             maxHeight: { xs: '28px', sm: '32px' },
+                            borderBottom: '1px solid #635bff',
+                        },
+                        '& .MuiDataGrid-columnHeaderTitle': {
+                            color: darkMode ? '#aab4ff' : '#23234a',
+                            fontWeight: 700,
                         },
                         '& .MuiDataGrid-row:hover': {
                             background: darkMode ? '#282a36' : '#e3e8ff',

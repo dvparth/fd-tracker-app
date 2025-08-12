@@ -106,88 +106,195 @@ function DepositForm({ deposit, srNo, onSuccess }) {
                     <Stack direction="column" spacing={2} alignItems="stretch">
                         <LabeledAutocomplete
                             label="Branch"
-                            name="branch"
-                            value={form.branch}
-                            onChange={handleAutoChange}
                             options={branchOptions}
+                            value={form.branch}
+                            onInputChange={(e, v) => handleAutoChange('branch', v)}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                             required
                         />
                         <LabeledAutocomplete
                             label="Person"
-                            name="person"
-                            value={form.person}
-                            onChange={handleAutoChange}
                             options={personOptions}
+                            value={form.person}
+                            onInputChange={(e, v) => handleAutoChange('person', v)}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                             required
                         />
                         <LabeledAutocomplete
                             label="Bank"
-                            name="bank"
-                            value={form.bank}
-                            onChange={handleAutoChange}
                             options={bankOptions}
+                            value={form.bank}
+                            onInputChange={(e, v) => handleAutoChange('bank', v)}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                             required
                         />
                         <LabeledTextField
-                            label="Principal"
                             name="principal"
+                            label="Principal"
                             value={form.principal}
                             onChange={handleChange}
-                            required
                             type="number"
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Interest"
                             name="interest"
+                            label="Interest"
                             value={form.interest}
                             onChange={handleChange}
-                            required
                             type="number"
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Before TDS"
                             name="beforeTds"
+                            label="Before TDS"
                             value={form.beforeTds}
                             onChange={handleChange}
-                            required
                             type="number"
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Value Date"
                             name="valueDate"
+                            label="Value Date"
                             value={form.valueDate}
                             onChange={handleChange}
                             type="date"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Maturity Date"
                             name="maturityDate"
+                            label="Maturity Date"
                             value={form.maturityDate}
                             onChange={handleChange}
                             type="date"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Account No"
                             name="accountNo"
+                            label="Account No"
                             value={form.accountNo}
                             onChange={handleChange}
                             required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Sr No"
                             name="srNo"
+                            label="Sr No"
                             value={form.srNo}
-                            required
                             InputProps={{ readOnly: true }}
+                            required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <LabeledTextField
-                            label="Term"
                             name="term"
+                            label="Term"
                             value={form.term}
                             onChange={handleChange}
                             required
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    background: '#fff',
+                                    borderRadius: 1,
+                                    border: '1px solid #bdbdbd',
+                                },
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#bdbdbd',
+                                },
+                            }}
                         />
                         <Button type="submit" variant={isEdit ? 'outlined' : 'contained'} color={isEdit ? 'primary' : 'success'} size="large" sx={{ minWidth: 120, alignSelf: 'center', mt: 2, background: '#635bff', color: '#fff', fontWeight: 700, letterSpacing: 0.5 }}>{isEdit ? 'Update' : 'Add'}</Button>
                     </Stack>
