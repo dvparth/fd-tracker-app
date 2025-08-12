@@ -8,6 +8,7 @@ import { TextField, Button, Stack, Paper, Autocomplete } from '@mui/material';
 const initialState = {
     bank: '',
     person: '',
+    branch: '',
     principal: '',
     interest: '',
     beforeTds: '',
@@ -15,6 +16,7 @@ const initialState = {
     maturityDate: '',
     accountNo: '',
     srNo: '',
+    term: '',
 };
 
 function DepositForm({ deposit, srNo, onSuccess }) {
@@ -35,6 +37,7 @@ function DepositForm({ deposit, srNo, onSuccess }) {
         maturityDate: deposit.maturityDate ? deposit.maturityDate.slice(0, 10) : '',
         accountNo: deposit.accountNo || '',
         srNo: deposit.srNo || srNo || '',
+        term: deposit.term || '',
     } : { ...initialState, srNo: srNo || '' });
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const dispatch = useDispatch();
@@ -51,7 +54,7 @@ function DepositForm({ deposit, srNo, onSuccess }) {
     const handleSubmit = e => {
         e.preventDefault();
         // Basic validation
-        if (!form.bank || !form.person || !form.principal || !form.interest || !form.beforeTds || !form.accountNo || !form.srNo) {
+        if (!form.bank || !form.person || !form.principal || !form.interest || !form.beforeTds || !form.accountNo || !form.srNo || !form.term) {
             setSnackbar({ open: true, message: 'Please fill all required fields', severity: 'error' });
             return;
         }
@@ -69,7 +72,14 @@ function DepositForm({ deposit, srNo, onSuccess }) {
 
     return (
         <>
-            <Paper elevation={isEdit ? 1 : 3} sx={{ p: 2, mb: 2 }}>
+            <Paper elevation={isEdit ? 2 : 4} sx={{
+                p: { xs: 1.5, sm: 2 }, mb: 2,
+                background: '#fff',
+                color: '#222',
+                border: '1px solid #e0e0e0',
+                boxShadow: '0 2px 8px #635bff22',
+                borderRadius: 2,
+            }}>
                 <form onSubmit={handleSubmit}>
                     <Stack direction="column" spacing={2} alignItems="stretch">
                         <Autocomplete
@@ -78,7 +88,23 @@ function DepositForm({ deposit, srNo, onSuccess }) {
                             value={form.branch}
                             onInputChange={(e, v) => handleAutoChange('branch', v)}
                             renderInput={(params) => (
-                                <TextField {...params} name="branch" label="Branch" required size="small" fullWidth />
+                                <TextField {...params} name="branch" label="Branch" required size="small" fullWidth
+                                    InputLabelProps={{
+                                        style: {
+                                            color: '#222',
+                                            fontWeight: 500,
+                                            letterSpacing: 0.2,
+                                        }
+                                    }}
+                                    inputProps={{
+                                        ...params.inputProps,
+                                        style: {
+                                            color: '#222',
+                                            background: '#fff',
+                                            borderRadius: 4,
+                                        }
+                                    }}
+                                />
                             )}
                         />
                         <Autocomplete
@@ -87,7 +113,23 @@ function DepositForm({ deposit, srNo, onSuccess }) {
                             value={form.person}
                             onInputChange={(e, v) => handleAutoChange('person', v)}
                             renderInput={(params) => (
-                                <TextField {...params} name="person" label="Person" required size="small" fullWidth />
+                                <TextField {...params} name="person" label="Person" required size="small" fullWidth
+                                    InputLabelProps={{
+                                        style: {
+                                            color: '#222',
+                                            fontWeight: 500,
+                                            letterSpacing: 0.2,
+                                        }
+                                    }}
+                                    inputProps={{
+                                        ...params.inputProps,
+                                        style: {
+                                            color: '#222',
+                                            background: '#fff',
+                                            borderRadius: 4,
+                                        }
+                                    }}
+                                />
                             )}
                         />
                         <Autocomplete
@@ -96,17 +138,140 @@ function DepositForm({ deposit, srNo, onSuccess }) {
                             value={form.bank}
                             onInputChange={(e, v) => handleAutoChange('bank', v)}
                             renderInput={(params) => (
-                                <TextField {...params} name="bank" label="Bank" required size="small" fullWidth />
+                                <TextField {...params} name="bank" label="Bank" required size="small" fullWidth
+                                    InputLabelProps={{
+                                        style: {
+                                            color: '#222',
+                                            fontWeight: 500,
+                                            letterSpacing: 0.2,
+                                        }
+                                    }}
+                                    inputProps={{
+                                        ...params.inputProps,
+                                        style: {
+                                            color: '#222',
+                                            background: '#fff',
+                                            borderRadius: 4,
+                                        }
+                                    }}
+                                />
                             )}
                         />
-                        <TextField name="principal" label="Principal" value={form.principal} onChange={handleChange} required type="number" size="small" fullWidth />
-                        <TextField name="interest" label="Interest" value={form.interest} onChange={handleChange} required type="number" size="small" fullWidth />
-                        <TextField name="beforeTds" label="Before TDS" value={form.beforeTds} onChange={handleChange} required type="number" size="small" fullWidth />
-                        <TextField name="valueDate" label="Value Date" value={form.valueDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true }} fullWidth />
-                        <TextField name="maturityDate" label="Maturity Date" value={form.maturityDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true }} fullWidth />
-                        <TextField name="accountNo" label="Account No" value={form.accountNo} onChange={handleChange} required size="small" fullWidth />
-                        <TextField name="srNo" label="Sr No" value={form.srNo} required size="small" fullWidth InputProps={{ readOnly: true }} />
-                        <Button type="submit" variant={isEdit ? 'outlined' : 'contained'} color={isEdit ? 'primary' : 'success'} size="large" sx={{ minWidth: 120, alignSelf: 'center', mt: 2 }}>{isEdit ? 'Update' : 'Add'}</Button>
+                        <TextField name="principal" label="Principal" value={form.principal} onChange={handleChange} required type="number" size="small" fullWidth
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="interest" label="Interest" value={form.interest} onChange={handleChange} required type="number" size="small" fullWidth
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="beforeTds" label="Before TDS" value={form.beforeTds} onChange={handleChange} required type="number" size="small" fullWidth
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="valueDate" label="Value Date" value={form.valueDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true, style: { color: '#222', fontWeight: 500, letterSpacing: 0.2 } }} fullWidth
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="maturityDate" label="Maturity Date" value={form.maturityDate} onChange={handleChange} type="date" size="small" InputLabelProps={{ shrink: true, style: { color: '#222', fontWeight: 500, letterSpacing: 0.2 } }} fullWidth
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="accountNo" label="Account No" value={form.accountNo} onChange={handleChange} required size="small" fullWidth
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="srNo" label="Sr No" value={form.srNo} required size="small" fullWidth InputProps={{ readOnly: true }}
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <TextField name="term" label="Term" value={form.term} onChange={handleChange} required size="small" fullWidth
+                            InputLabelProps={{
+                                style: {
+                                    color: '#222',
+                                    fontWeight: 500,
+                                    letterSpacing: 0.2,
+                                }
+                            }}
+                            inputProps={{
+                                style: {
+                                    color: '#222',
+                                    background: '#fff',
+                                    borderRadius: 4,
+                                }
+                            }}
+                        />
+                        <Button type="submit" variant={isEdit ? 'outlined' : 'contained'} color={isEdit ? 'primary' : 'success'} size="large" sx={{ minWidth: 120, alignSelf: 'center', mt: 2, background: '#635bff', color: '#fff', fontWeight: 700, letterSpacing: 0.5 }}>{isEdit ? 'Update' : 'Add'}</Button>
                     </Stack>
                 </form>
             </Paper>

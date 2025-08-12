@@ -7,10 +7,11 @@ import Box from '@mui/material/Box';
 import DepositForm from './DepositForm';
 import { fetchDeposits, deleteDeposit } from './slices/depositsSlice';
 import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import Switch from '@mui/material/Switch';
-import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
@@ -18,8 +19,9 @@ import Slide from '@mui/material/Slide';
 import Snackbar from '@mui/material/Snackbar';
 import './index.css';
 
-function App({ themeMode, setThemeMode }) {
+function App() {
     const dispatch = useDispatch();
+    const [darkMode, setDarkMode] = useState(false);
     useEffect(() => {
         dispatch(fetchDeposits());
     }, [dispatch]);
@@ -44,6 +46,11 @@ function App({ themeMode, setThemeMode }) {
         }
     };
     const handleDeleteCancel = () => setDeleteTarget(null);
+    const handleEditSubmit = (values) => {
+        // dispatch updateDeposit here if needed
+        setEditDeposit(null);
+        setSnackbar({ open: true, message: 'Deposit updated', severity: 'success' });
+    };
 
     // DataGrid columns
     const columns = [
@@ -88,13 +95,13 @@ function App({ themeMode, setThemeMode }) {
     }));
 
     return (
-        <div style={{ minHeight: '100vh', background: themeMode === 'dark' ? '#18181b' : '#f6fafd' }}>
+        <div style={{ minHeight: '100vh', background: darkMode ? '#18181b' : '#f6fafd' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2, mt: 2, px: { xs: 1, sm: 2 } }}>
                 <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', fontSize: { xs: '1.3rem', sm: '2rem' } }}>Deposit Tracker</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: { xs: 2, sm: 0 } }}>
                     <Switch
-                        checked={themeMode === 'dark'}
-                        onChange={e => setThemeMode(e.target.checked ? 'dark' : 'light')}
+                        checked={darkMode}
+                        onChange={e => setDarkMode(e.target.checked)}
                         inputProps={{ 'aria-label': 'toggle dark mode' }}
                         sx={{ mr: 1 }}
                     />
@@ -104,7 +111,7 @@ function App({ themeMode, setThemeMode }) {
                     </button>
                 </Box>
             </Box>
-            <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
+            <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: darkMode ? '#23232b' : '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
@@ -114,6 +121,8 @@ function App({ themeMode, setThemeMode }) {
                     autoHeight={false}
                     sx={{
                         fontSize: { xs: '0.85rem', sm: '0.90rem' },
+                        background: darkMode ? '#23232b' : '#fff',
+                        color: darkMode ? '#f3f6fb' : '#222',
                         '& .MuiDataGrid-row': {
                             cursor: 'pointer',
                             minHeight: { xs: '24px', sm: '28px' },
@@ -126,14 +135,14 @@ function App({ themeMode, setThemeMode }) {
                             transition: 'color 0.3s',
                         },
                         '& .MuiDataGrid-columnHeaders': {
-                            background: '#f6fafd',
+                            background: darkMode ? '#18181b' : '#f6fafd',
                             fontWeight: 700,
                             minHeight: { xs: '28px', sm: '32px' },
                             maxHeight: { xs: '28px', sm: '32px' },
                         },
                         '& .MuiDataGrid-row:hover': {
-                            background: '#e3e8ff',
-                            boxShadow: '0 2px 8px #635bff22',
+                            background: darkMode ? '#282a36' : '#e3e8ff',
+                            boxShadow: darkMode ? '0 2px 8px #282a3622' : '0 2px 8px #635bff22',
                         },
                         '& .editing-row': {
                             background: '#ffe3e3 !important',
@@ -157,101 +166,194 @@ function App({ themeMode, setThemeMode }) {
                 />
             </Box>
 
-            {/* Edit Deposit Dialog */}
-            <Dialog
-                open={!!editDeposit}
-                onClose={handleEditClose}
-                maxWidth="md"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 4,
-                        boxShadow: '0 12px 48px rgba(99,91,255,0.18)',
-                        background: '#fff',
-                        border: '1px solid #e3e8ff',
-                        maxWidth: 540,
-                        margin: '0 auto',
-                        overflow: 'hidden',
-                        zIndex: 1400
-                    }
-                }}
-            >
-                <Box className="edit-dialog-content" sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'stretch', minWidth: 380, maxHeight: '80vh', overflowY: 'auto', position: 'relative', zIndex: 100 }}>
-                    <Box className="edit-dialog-header" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, background: 'rgba(99,91,255,0.07)', borderRadius: 2, px: 2, py: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Edit" style={{ width: 32, height: 32, borderRadius: '50%', boxShadow: '0 2px 8px rgba(99,91,255,0.12)' }} />
-                            <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', textShadow: '0 1px 4px #e3e8ff' }}>Edit Deposit</Typography>
-                        </Box>
-                        <IconButton onClick={handleEditClose} className="edit-dialog-close" size="large" sx={{ fontSize: '2.2rem', color: '#635bff', ml: 1, background: '#e3e8ff', borderRadius: 2, boxShadow: '0 1px 4px #635bff22' }}>
-                            &times;
-                        </IconButton>
-                    </Box>
-                    <Box className="edit-dialog-form" sx={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(0,191,174,0.04)', borderRadius: 2, p: 2, boxShadow: '0 1px 8px #00bfae11' }}>
-                        {editDeposit && <DepositForm deposit={editDeposit} onSuccess={() => { handleEditClose(); handleRefresh(); }} />}
-                    </Box>
-                </Box>
-            </Dialog>
-
-            {/* Add Deposit Dialog */}
+            {/* Add Dialog */}
             <Dialog
                 open={addOpen}
                 onClose={handleAddClose}
-                maxWidth="md"
+                maxWidth="xs"
                 fullWidth
+                aria-modal="true"
+                aria-labelledby="add-deposit-title"
+                aria-describedby="add-deposit-desc"
                 PaperProps={{
                     sx: {
-                        borderRadius: 4,
-                        boxShadow: '0 12px 48px rgba(99,91,255,0.18)',
-                        background: '#fff',
-                        border: '1px solid #e3e8ff',
-                        maxWidth: 540,
-                        margin: '0 auto',
-                        overflow: 'hidden',
-                        zIndex: 1400
-                    }
+                        borderRadius: 3,
+                        background: darkMode ? 'linear-gradient(135deg, #18181b 60%, #23234a 100%)' : '#fff',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        boxShadow: darkMode ? '0 8px 32px #000b' : '0 2px 8px #635bff22',
+                        border: darkMode ? '2px solid #635bff' : '1px solid #e0e0e0',
+                        p: { xs: 1, sm: 2 },
+                    },
+                    role: 'dialog',
+                    'aria-label': 'Add Deposit Dialog',
                 }}
             >
-                <Box className="add-dialog-content" sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'stretch', minWidth: 380, maxHeight: '80vh', overflowY: 'auto', position: 'relative', zIndex: 100 }}>
-                    <Box className="add-dialog-header" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, background: 'rgba(99,91,255,0.07)', borderRadius: 2, px: 2, py: 1 }}>
-                        <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', textShadow: '0 1px 4px #e3e8ff' }}>Add Deposit</Typography>
-                        <IconButton onClick={handleAddClose} className="add-dialog-close" size="large" sx={{ fontSize: '2.2rem', color: '#635bff', ml: 1, background: '#e3e8ff', borderRadius: 2, boxShadow: '0 1px 4px #635bff22' }}>
-                            &times;
-                        </IconButton>
-                    </Box>
-                    <Box className="add-dialog-form" sx={{ display: 'flex', flexDirection: 'column', gap: 3, background: 'rgba(0,191,174,0.04)', borderRadius: 2, p: 2, boxShadow: '0 1px 8px #00bfae11' }}>
-                        <DepositForm onSuccess={() => { handleAddClose(); handleRefresh(); }} />
-                    </Box>
-                </Box>
+                <DialogTitle
+                    id="add-deposit-title"
+                    sx={{
+                        background: darkMode ? 'linear-gradient(90deg, #23232b 60%, #635bff 100%)' : '#f6fafd',
+                        color: darkMode ? '#aab4ff' : '#222',
+                        fontWeight: 700,
+                        fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                        borderBottom: darkMode ? '1px solid #635bff' : '1px solid #e0e0e0',
+                        letterSpacing: 0.5,
+                        borderTopLeftRadius: 12,
+                        borderTopRightRadius: 12,
+                    }}
+                >
+                    Add Deposit
+                </DialogTitle>
+                <DialogContent
+                    id="add-deposit-desc"
+                    sx={{
+                        background: 'transparent',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        pb: 2,
+                    }}
+                >
+                    <DepositForm
+                        srNo={rows.length + 1}
+                        onSuccess={handleAddClose}
+                        darkMode={darkMode}
+                        autoFocus
+                    />
+                </DialogContent>
+            </Dialog>
+            {/* Edit Dialog */}
+            <Dialog
+                open={!!editDeposit}
+                onClose={handleEditClose}
+                maxWidth="xs"
+                fullWidth
+                aria-modal="true"
+                aria-labelledby="edit-deposit-title"
+                aria-describedby="edit-deposit-desc"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        background: darkMode ? 'linear-gradient(135deg, #18181b 60%, #23234a 100%)' : '#fff',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        boxShadow: darkMode ? '0 8px 32px #000b' : '0 2px 8px #635bff22',
+                        border: darkMode ? '2px solid #635bff' : '1px solid #e0e0e0',
+                        p: { xs: 1, sm: 2 },
+                    },
+                    role: 'dialog',
+                    'aria-label': 'Edit Deposit Dialog',
+                }}
+            >
+                <DialogTitle
+                    id="edit-deposit-title"
+                    sx={{
+                        background: darkMode ? 'linear-gradient(90deg, #23232b 60%, #635bff 100%)' : '#f6fafd',
+                        color: darkMode ? '#aab4ff' : '#222',
+                        fontWeight: 700,
+                        fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                        borderBottom: darkMode ? '1px solid #635bff' : '1px solid #e0e0e0',
+                        letterSpacing: 0.5,
+                        borderTopLeftRadius: 12,
+                        borderTopRightRadius: 12,
+                    }}
+                >
+                    Edit Deposit
+                </DialogTitle>
+                <DialogContent
+                    id="edit-deposit-desc"
+                    sx={{
+                        background: 'transparent',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        pb: 2,
+                    }}
+                >
+                    <DepositForm
+                        deposit={editDeposit}
+                        onSubmit={handleEditSubmit}
+                        onSuccess={handleEditClose}
+                        isEdit={true}
+                        darkMode={darkMode}
+                        autoFocus
+                    />
+                </DialogContent>
+            </Dialog>
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={!!deleteTarget}
+                onClose={handleDeleteCancel}
+                maxWidth="xs"
+                fullWidth
+                aria-modal="true"
+                aria-labelledby="delete-confirm-title"
+                aria-describedby="delete-confirm-desc"
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        background: darkMode ? 'linear-gradient(135deg, #18181b 60%, #23234a 100%)' : '#fff',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        boxShadow: darkMode ? '0 8px 32px #000b' : '0 2px 8px #635bff22',
+                        border: darkMode ? '2px solid #ff6b6b' : '1px solid #e0e0e0',
+                        p: { xs: 1, sm: 2 },
+                    },
+                    role: 'dialog',
+                    'aria-label': 'Delete Confirmation Dialog',
+                }}
+            >
+                <DialogTitle
+                    id="delete-confirm-title"
+                    sx={{
+                        background: darkMode ? 'linear-gradient(90deg, #23232b 60%, #ff6b6b 100%)' : '#f6fafd',
+                        color: darkMode ? '#ffb4b4' : '#b71c1c',
+                        fontWeight: 700,
+                        fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                        borderBottom: darkMode ? '1px solid #ff6b6b' : '1px solid #e0e0e0',
+                        letterSpacing: 0.5,
+                        borderTopLeftRadius: 12,
+                        borderTopRightRadius: 12,
+                    }}
+                >
+                    Confirm Delete
+                </DialogTitle>
+                <DialogContent
+                    id="delete-confirm-desc"
+                    sx={{
+                        background: 'transparent',
+                        color: darkMode ? '#f3f6fb' : '#222',
+                        pb: 2,
+                        textAlign: 'center',
+                    }}
+                >
+                    <WarningAmberIcon sx={{ fontSize: 48, color: darkMode ? '#ff6b6b' : '#b71c1c', mb: 2 }} />
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to delete this deposit?
+                    </Typography>
+                    <Stack direction="row" spacing={2} justifyContent="center">
+                        <Button onClick={handleDeleteCancel} variant="outlined" color="inherit" sx={{ minWidth: 100, borderColor: darkMode ? '#aab4ff' : undefined, color: darkMode ? '#aab4ff' : undefined }}>Cancel</Button>
+                        <Button onClick={handleDeleteConfirm} variant="contained" color="error" sx={{ minWidth: 100 }}>Delete</Button>
+                    </Stack>
+                </DialogContent>
             </Dialog>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={!!deleteTarget} onClose={handleDeleteCancel} TransitionComponent={Slide} TransitionProps={{ direction: 'up' }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, minWidth: 340 }}>
-                    <WarningAmberIcon color="warning" sx={{ fontSize: 48, mb: 1 }} />
-                    <DialogTitle sx={{ textAlign: 'center', fontWeight: 700, color: '#d97706', mb: 1 }}>Delete Deposit?</DialogTitle>
-                    <Typography sx={{ mb: 2, color: '#555', textAlign: 'center' }}>
-                        Are you sure you want to delete this deposit? This action cannot be undone.
-                    </Typography>
-                    <DialogActions sx={{ justifyContent: 'center', gap: 2 }}>
-                        <Button onClick={handleDeleteCancel} color="primary" variant="outlined">Cancel</Button>
-                        <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
-                    </DialogActions>
-                </Box>
-            </Dialog>
+            {/* Delete Confirmation Snackbar */}
             <Snackbar
                 open={snackbar.open}
-                autoHideDuration={2500}
+                autoHideDuration={6000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                TransitionComponent={Slide}
                 message={snackbar.message}
-                ContentProps={{ sx: { fontWeight: 600, color: snackbar.severity === 'success' ? '#388e3c' : '#d32f2f', background: '#fff', border: '1px solid #e3e8ff', boxShadow: 2 } }}
+                action={
+                    <Button color="inherit" onClick={() => setSnackbar({ ...snackbar, open: false })}>
+                        Close
+                    </Button>
+                }
+                sx={{
+                    '& .MuiSnackbarContent-root': {
+                        backgroundColor: snackbar.severity === 'success' ? '#4caf50' : '#f44336',
+                        color: '#fff',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        fontSize: { xs: '0.9rem', sm: '1rem' },
+                        py: 1.5,
+                        px: 2,
+                    }
+                }}
             />
-
-            {/* Simple Footer */}
-            <footer style={{ textAlign: 'center', margin: '48px 0 16px 0', color: '#888', fontSize: '1rem' }}>
-                &copy; {new Date().getFullYear()} Deposit Tracker. Inspired by Stripe.
-            </footer>
         </div>
     );
 }
