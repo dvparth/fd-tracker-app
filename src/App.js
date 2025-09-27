@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Typography from '@mui/material/Typography';
+import { Routes, Route, Link } from 'react-router-dom';
 import { DataGrid } from '@mui/x-data-grid';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
@@ -14,6 +15,7 @@ import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import './index.css';
+import MFHoldings from './components/MFHoldings';
 
 /**
  * Main App component.
@@ -134,6 +136,9 @@ function App() {
 
     return (
         <div style={{ minHeight: '100vh', background: darkMode ? '#18181b' : '#f6fafd' }}>
+            <Box sx={{ px: 2, py: 1 }}>
+                <Link to="/mf-holdings" style={{ marginRight: 12, color: '#635bff', fontWeight: 600 }}>MF Holdings</Link>
+            </Box>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2, mt: 2, px: { xs: 1, sm: 2 } }}>
                 <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', fontSize: { xs: '1.3rem', sm: '2rem' } }}>Deposit Tracker</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: { xs: 2, sm: 0 } }}>
@@ -149,74 +154,79 @@ function App() {
                     </button>
                 </Box>
             </Box>
-            <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: darkMode ? '#23232b' : '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={10}
-                    rowsPerPageOptions={[10, 25, 50]}
-                    disableSelectionOnClick
-                    autoHeight={false}
-                    sx={{
-                        fontSize: { xs: '0.85rem', sm: '0.90rem' },
-                        background: darkMode ? '#23232b' : '#fff',
-                        color: darkMode ? '#f3f6fb' : '#222',
-                        '& .MuiDataGrid-row': {
-                            cursor: 'pointer',
-                            minHeight: { xs: '24px', sm: '28px' },
-                            maxHeight: { xs: '24px', sm: '28px' },
-                            transition: 'background 0.3s, box-shadow 0.3s',
-                        },
-                        '& .MuiDataGrid-cell': {
-                            padding: { xs: '2px 2px', sm: '2px 6px' },
-                            fontSize: { xs: '0.85rem', sm: '0.90rem' },
-                            transition: 'color 0.3s',
-                            border: '1px solid #e0e0e0',
-                            borderColor: darkMode ? '#444' : '#e0e0e0',
-                        },
-                        '& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader, & .MuiDataGrid-columnHeaderTitle': {
-                            background: darkMode ? '#18181b !important' : '#f9f9ff !important',
-                            color: darkMode ? '#f3f6fb !important' : '#23234a !important',
-                            fontWeight: 800,
-                            fontSize: { xs: '1rem', sm: '1.1rem' },
-                            letterSpacing: 0.2,
-                            textShadow: 'none',
-                            minHeight: { xs: '28px', sm: '32px' },
-                            maxHeight: { xs: '28px', sm: '32px' },
-                            borderBottom: '1px solid #635bff',
-                        },
-                        '& .MuiDataGrid-columnHeaderTitle': {
-                            color: darkMode ? '#f3f6fb' : '#23234a',
-                            fontWeight: 800,
-                            fontSize: { xs: '1rem', sm: '1.1rem' },
-                            letterSpacing: 0.2,
-                            textShadow: 'none',
-                        },
-                        '& .MuiDataGrid-row:hover': {
-                            background: darkMode ? '#282a36' : '#e3e8ff',
-                            boxShadow: darkMode ? '0 2px 8px #282a3622' : '0 2px 8px #635bff22',
-                        },
-                        '& .editing-row': {
-                            background: '#ffe3e3 !important',
-                            boxShadow: '0 0 0 2px #ff6b6b',
-                        },
-                        '& .MuiDataGrid-cell[data-field="srNo"]': {
-                            textAlign: 'right',
-                        },
-                        '& .MuiDataGrid-cell[data-field="principal"]': {
-                            textAlign: 'right',
-                        },
-                        '& .MuiDataGrid-cell[data-field="interest"]': {
-                            textAlign: 'right',
-                        },
-                        '& .MuiDataGrid-cell[data-field="beforeTds"]': {
-                            textAlign: 'right',
-                        },
-                    }}
-                    onRowDoubleClick={(params) => handleEditOpen(params.row)}
-                    getRowClassName={(params) => editDeposit && params.row._id === editDeposit._id ? 'editing-row' : ''}
-                />
-            </Box>
+            <Routes>
+                <Route path="/" element={(
+                    <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: darkMode ? '#23232b' : '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
+                        <DataGrid
+                            rows={rows}
+                            columns={columns}
+                            pageSize={10}
+                            rowsPerPageOptions={[10, 25, 50]}
+                            disableSelectionOnClick
+                            autoHeight={false}
+                            sx={{
+                                fontSize: { xs: '0.85rem', sm: '0.90rem' },
+                                background: darkMode ? '#23232b' : '#fff',
+                                color: darkMode ? '#f3f6fb' : '#222',
+                                '& .MuiDataGrid-row': {
+                                    cursor: 'pointer',
+                                    minHeight: { xs: '24px', sm: '28px' },
+                                    maxHeight: { xs: '24px', sm: '28px' },
+                                    transition: 'background 0.3s, box-shadow 0.3s',
+                                },
+                                '& .MuiDataGrid-cell': {
+                                    padding: { xs: '2px 2px', sm: '2px 6px' },
+                                    fontSize: { xs: '0.85rem', sm: '0.90rem' },
+                                    transition: 'color 0.3s',
+                                    border: '1px solid #e0e0e0',
+                                    borderColor: darkMode ? '#444' : '#e0e0e0',
+                                },
+                                '& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader, & .MuiDataGrid-columnHeaderTitle': {
+                                    background: darkMode ? '#18181b !important' : '#f9f9ff !important',
+                                    color: darkMode ? '#f3f6fb !important' : '#23234a !important',
+                                    fontWeight: 800,
+                                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                                    letterSpacing: 0.2,
+                                    textShadow: 'none',
+                                    minHeight: { xs: '28px', sm: '32px' },
+                                    maxHeight: { xs: '28px', sm: '32px' },
+                                    borderBottom: '1px solid #635bff',
+                                },
+                                '& .MuiDataGrid-columnHeaderTitle': {
+                                    color: darkMode ? '#f3f6fb' : '#23234a',
+                                    fontWeight: 800,
+                                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                                    letterSpacing: 0.2,
+                                    textShadow: 'none',
+                                },
+                                '& .MuiDataGrid-row:hover': {
+                                    background: darkMode ? '#282a36' : '#e3e8ff',
+                                    boxShadow: darkMode ? '0 2px 8px #282a3622' : '0 2px 8px #635bff22',
+                                },
+                                '& .editing-row': {
+                                    background: '#ffe3e3 !important',
+                                    boxShadow: '0 0 0 2px #ff6b6b',
+                                },
+                                '& .MuiDataGrid-cell[data-field="srNo"]': {
+                                    textAlign: 'right',
+                                },
+                                '& .MuiDataGrid-cell[data-field="principal"]': {
+                                    textAlign: 'right',
+                                },
+                                '& .MuiDataGrid-cell[data-field="interest"]': {
+                                    textAlign: 'right',
+                                },
+                                '& .MuiDataGrid-cell[data-field="beforeTds"]': {
+                                    textAlign: 'right',
+                                },
+                            }}
+                            onRowDoubleClick={(params) => handleEditOpen(params.row)}
+                            getRowClassName={(params) => editDeposit && params.row._id === editDeposit._id ? 'editing-row' : ''}
+                        />
+                    </Box>
+                )} />
+                <Route path="/mf-holdings" element={<MFHoldings />} />
+            </Routes>
 
             {/* Add Dialog */}
             <CustomDialog
