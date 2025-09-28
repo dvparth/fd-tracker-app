@@ -161,6 +161,8 @@ export default function MFTracker() {
     }
 
     const latestDate = rows.reduce((acc, r) => r.latestDate && (!acc || r.latestDate > acc) ? r.latestDate : acc, null);
+    const prevDate = rows.reduce((acc, r) => acc || (r.hist && r.hist[0] && r.hist[0].date) || null, null);
+    const prev2Date = rows.reduce((acc, r) => acc || (r.hist && r.hist[1] && r.hist[1].date) || null, null);
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto' }}>
@@ -197,29 +199,32 @@ export default function MFTracker() {
                             <Typography sx={{ fontSize: '0.68rem', color: '#7a8696', mt: 0.5 }}>{totalsProfitPct !== null ? `(${totalsProfitPct.toFixed(2)}%)` : ''}</Typography>
                         </Grid>
 
-                        {/* Row 2: centered previous-NAV delta */}
+                        {/* Row 2: 1 Day change (left aligned) - own dedicated row */}
                         <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', py: 0.75 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, bgcolor: '#ffffff', borderRadius: 2, boxShadow: '0 4px 12px rgba(15,23,36,0.04)' }}>
                                     {totals.prevDelta > 0 ? <ArrowUpwardIcon sx={{ color: accentColor(totals.prevDelta), fontSize: '1.05rem' }} /> : totals.prevDelta < 0 ? <ArrowDownwardIcon sx={{ color: accentColor(totals.prevDelta), fontSize: '1.05rem' }} /> : null}
                                     <Box sx={{ textAlign: 'left' }}>
-                                        <Typography sx={{ fontWeight: 800, color: profitColor(totals.prevDelta), fontSize: '0.98rem' }}>Change vs Prev NAV: ₹ {fmtRoundUp(totals.prevDelta)}</Typography>
+                                        <Typography sx={{ fontWeight: 800, color: profitColor(totals.prevDelta), fontSize: '0.98rem' }}>1 Day change: ₹ {fmtRoundUp(totals.prevDelta)}</Typography>
                                         <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>{totalsPrevDeltaPct !== null ? `(${totalsPrevDeltaPct.toFixed(2)}%)` : ''}</Typography>
                                     </Box>
                                 </Box>
                             </Box>
                         </Grid>
 
-                        {/* Row 3: Prev and Prev 2 aligned under columns */}
-                        <Grid item xs={4}>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#666', mt: 1 }}>Prev</Typography>
-                            <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev1)}</Typography>
+                        {/* Row 3: dedicated row for Prev and Prev 2 */}
+                        <Grid item xs={12} sx={{ mt: 0.5 }}>
+                            <Grid container>
+                                <Grid item xs={6}>
+                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {prevDate ? `(${dateShort(prevDate)})` : ''}</Typography>
+                                    <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev1)}</Typography>
+                                </Grid>
+                                <Grid item xs={6} sx={{ textAlign: 'right' }}>
+                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {prev2Date ? `(${dateShort(prev2Date)})` : ''}</Typography>
+                                    <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev2)}</Typography>
+                                </Grid>
+                            </Grid>
                         </Grid>
-                        <Grid item xs={4} sx={{ textAlign: 'center' }}>
-                            <Typography sx={{ fontSize: '0.72rem', color: '#666', mt: 1 }}>Prev 2</Typography>
-                            <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev2)}</Typography>
-                        </Grid>
-                        <Grid item xs={4} />
                     </Grid>
                 </CardContent>
             </Card>
@@ -229,12 +234,29 @@ export default function MFTracker() {
                 {rows.map((r) => {
                     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
                     return (
-                        <Accordion key={r.scheme_code} sx={{ borderRadius: 2, borderLeft: '4px solid', borderLeftColor: accentColor(r.prevDelta), background: '#fff', boxShadow: '0 6px 18px rgba(15,23,36,0.03)' }} disableGutters>
+                        <Accordion
+                            key={r.scheme_code}
+                            disableGutters
+                            sx={{
+                                borderRadius: 2,
+                                borderLeft: '4px solid',
+                                borderLeftColor: accentColor(r.prevDelta),
+                                background: '#fff',
+                                boxShadow: '0 6px 18px rgba(15,23,36,0.03)',
+                                transition: 'transform .18s ease, box-shadow .18s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 10px 28px rgba(15,23,36,0.08)'
+                                },
+                                // allow nested hover styles to change invested color
+                                '&:hover .invested-amt': { color: '#0f1724', transform: 'translateY(-1px)' }
+                            }}
+                        >
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '62%' }}>
                                         <Typography sx={{ fontSize: '0.98rem', fontWeight: 800, color: '#0f1724' }}>{toTitleCase(r.scheme_name)}</Typography>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>{r.unit ? `${fmtUnit(r.unit)} units • Invested ₹ ${fmtRoundUp(r.principal)}` : `Invested ₹ ${fmtRoundUp(r.principal)}`}</Typography>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>{r.unit ? `${fmtUnit(r.unit)} units` : ''}</Typography>
                                     </Box>
                                     <Box sx={{ textAlign: 'right', minWidth: 120 }}>
                                         <Typography sx={{ fontWeight: 800, color: '#0f1724' }}>₹ {r.marketValue !== null ? fmtRoundUp(r.marketValue) : '-'}</Typography>
@@ -249,16 +271,18 @@ export default function MFTracker() {
                                 </Box>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <Grid container spacing={1}>
-                                    <Grid item xs={6}>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev</Typography>
-                                        <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[0] && r.hist[0].marketValue !== null ? fmtRoundUp(r.hist[0].marketValue) : '-'}</Typography>
-                                        <Typography sx={{ fontSize: '0.68rem', color: '#777' }}>{r.hist[0] && r.hist[0].date ? dateShort(r.hist[0].date) : ''}</Typography>
+                                <Grid container spacing={1} alignItems="center">
+                                    <Grid item xs={4}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>Invested</Typography>
+                                        <Typography sx={{ fontWeight: 700 }}>₹ {fmtRoundUp(r.principal)}</Typography>
                                     </Grid>
-                                    <Grid item xs={6}>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2</Typography>
+                                    <Grid item xs={4} sx={{ textAlign: 'center', pl: 1 }}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {r.hist[0] && r.hist[0].date ? `(${dateShort(r.hist[0].date)})` : ''}</Typography>
+                                        <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[0] && r.hist[0].marketValue !== null ? fmtRoundUp(r.hist[0].marketValue) : '-'}</Typography>
+                                    </Grid>
+                                    <Grid item xs={4} sx={{ textAlign: 'right', pl: 2 }}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {r.hist[1] && r.hist[1].date ? `(${dateShort(r.hist[1].date)})` : ''}</Typography>
                                         <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[1] && r.hist[1].marketValue !== null ? fmtRoundUp(r.hist[1].marketValue) : '-'}</Typography>
-                                        <Typography sx={{ fontSize: '0.68rem', color: '#777' }}>{r.hist[1] && r.hist[1].date ? dateShort(r.hist[1].date) : ''}</Typography>
                                     </Grid>
                                     <Grid item xs={12}>
                                         <Divider sx={{ my: 1 }} />
