@@ -181,22 +181,22 @@ export default function MFTracker() {
             {/* Top summary card - strict 3-column alignment */}
             <Card elevation={4} sx={{ mb: 1.5, borderRadius: 2, background: 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: '0 8px 24px rgba(31,42,68,0.06)' }}>
                 <CardContent>
-                    <Grid container spacing={1} alignItems="center">
+                    <Grid container spacing={4} alignItems="center" sx={{ columnGap: 3 }}>
                         {/* Row 1: 3 columns for perfect alignment */}
                         <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80 }}>
-                            <Typography sx={{ fontSize: '0.75rem', color: '#556475' }}>Current Value</Typography>
-                            <Typography sx={{ fontWeight: 900, fontSize: '1.18rem', color: '#0f1724' }}>₹ {fmtRoundUp(totals.marketValue)}</Typography>
-                            <Typography sx={{ fontSize: '0.68rem', color: '#7a8696', mt: 0.5 }}>{latestDate ? dateShort(latestDate) : ''}</Typography>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Current Value</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.marketValue)}</Typography>
+                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{latestDate ? dateShort(latestDate) : ''}</Typography>
                         </Grid>
                         <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80, alignItems: 'center' }}>
-                            <Typography sx={{ fontSize: '0.75rem', color: '#556475' }}>Invested</Typography>
-                            <Typography sx={{ fontWeight: 900, fontSize: '1.18rem', color: '#0f1724' }}>₹ {fmtRoundUp(totals.principal)}</Typography>
-                            <Typography sx={{ fontSize: '0.68rem', color: '#7a8696', mt: 0.5 }}>{rows.length} schemes</Typography>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Invested</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.principal)}</Typography>
+                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{rows.length} schemes</Typography>
                         </Grid>
                         <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80, alignItems: 'flex-end' }}>
-                            <Typography sx={{ fontSize: '0.75rem', color: '#556475' }}>Profit / Loss</Typography>
-                            <Typography sx={{ fontWeight: 900, fontSize: '1.18rem', color: profitColor(totals.profit) }}>₹ {fmtRoundUp(totals.profit)}</Typography>
-                            <Typography sx={{ fontSize: '0.68rem', color: '#7a8696', mt: 0.5 }}>{totalsProfitPct !== null ? `(${totalsProfitPct.toFixed(2)}%)` : ''}</Typography>
+                            <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Profit / Loss</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: profitColor(totals.profit) }}>₹{fmtRoundUp(totals.profit)}</Typography>
+                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{totalsProfitPct !== null ? `(${totalsProfitPct.toFixed(2)}%)` : ''}</Typography>
                         </Grid>
 
                         {/* Row 2: 1 Day change (left aligned) - own dedicated row */}
@@ -214,16 +214,16 @@ export default function MFTracker() {
 
                         {/* Row 3: dedicated row for Prev and Prev 2 */}
                         <Grid item xs={12} sx={{ mt: 0.5 }}>
-                            <Grid container>
-                                <Grid item xs={6}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 2 }}>
+                                <Box sx={{ textAlign: 'left', flex: 1 }}>
                                     <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {prevDate ? `(${dateShort(prevDate)})` : ''}</Typography>
-                                    <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev1)}</Typography>
-                                </Grid>
-                                <Grid item xs={6} sx={{ textAlign: 'right' }}>
+                                    <Typography sx={{ fontWeight: 800 }}>₹{fmtRoundUp(totals.prev1)}</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'right', flex: 1 }}>
                                     <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {prev2Date ? `(${dateShort(prev2Date)})` : ''}</Typography>
-                                    <Typography sx={{ fontWeight: 800 }}>₹ {fmtRoundUp(totals.prev2)}</Typography>
-                                </Grid>
-                            </Grid>
+                                    <Typography sx={{ fontWeight: 800 }}>₹{fmtRoundUp(totals.prev2)}</Typography>
+                                </Box>
+                            </Box>
                         </Grid>
                     </Grid>
                 </CardContent>
@@ -233,6 +233,7 @@ export default function MFTracker() {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {rows.map((r) => {
                     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
+                    const profitPct = (r.principal && r.profit !== null) ? ((r.profit / r.principal) * 100) : null;
                     return (
                         <Accordion
                             key={r.scheme_code}
@@ -259,10 +260,10 @@ export default function MFTracker() {
                                         <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>{r.unit ? `${fmtUnit(r.unit)} units` : ''}</Typography>
                                     </Box>
                                     <Box sx={{ textAlign: 'right', minWidth: 120 }}>
-                                        <Typography sx={{ fontWeight: 800, color: '#0f1724' }}>₹ {r.marketValue !== null ? fmtRoundUp(r.marketValue) : '-'}</Typography>
+                                        <Typography sx={{ fontWeight: 800 }} style={{ color: '#0f1724' }}>₹ {r.marketValue !== null ? fmtRoundUp(r.marketValue) : '-'}</Typography>
                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5 }}>
-                                            {r.profit > 0 ? <ArrowUpwardIcon sx={{ color: accentColor(r.profit), fontSize: '1rem' }} /> : r.profit < 0 ? <ArrowDownwardIcon sx={{ color: accentColor(r.profit), fontSize: '1rem' }} /> : null}
-                                            <Typography sx={{ fontWeight: 700, color: profitColor(r.profit) }}>{r.profit !== null ? `₹ ${fmtRoundUp(r.profit)}` : '-'}</Typography>
+                                            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }} style={{ color: accentColor(r.profit) }}>{r.profit !== null ? `₹ ${fmtRoundUp(r.profit)}` : '-'}</Typography>
+                                            <Typography sx={{ fontSize: '0.72rem', ml: 0.5 }} style={{ color: accentColor(r.profit) }}>{profitPct !== null ? `${profitPct > 0 ? '+' : ''}${profitPct.toFixed(2)}%` : ''}</Typography>
                                         </Box>
                                         {/* secondary: previous NAV delta */}
                                         <Typography sx={{ fontSize: '0.72rem', color: accentColor(r.prevDelta), fontWeight: 700 }}>{r.prevDelta !== null ? `${r.prevDelta > 0 ? '+' : ''}₹ ${fmtRoundUp(r.prevDelta)} ${pct !== null ? `(${pct.toFixed(2)}%)` : ''}` : ''}</Typography>
@@ -272,15 +273,15 @@ export default function MFTracker() {
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Grid container spacing={1} alignItems="center">
-                                    <Grid item xs={4}>
+                                    <Grid item xs={4} sx={{ flex: 1 }}>
                                         <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>Invested</Typography>
-                                        <Typography sx={{ fontWeight: 700 }}>₹ {fmtRoundUp(r.principal)}</Typography>
+                                        <Typography sx={{ fontWeight: 700, color: '#0f1724' }}>₹ {fmtRoundUp(r.principal)}</Typography>
                                     </Grid>
-                                    <Grid item xs={4} sx={{ textAlign: 'center', pl: 1 }}>
+                                    <Grid item xs={4} sx={{ flex: 1, textAlign: 'center' }}>
                                         <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {r.hist[0] && r.hist[0].date ? `(${dateShort(r.hist[0].date)})` : ''}</Typography>
                                         <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[0] && r.hist[0].marketValue !== null ? fmtRoundUp(r.hist[0].marketValue) : '-'}</Typography>
                                     </Grid>
-                                    <Grid item xs={4} sx={{ textAlign: 'right', pl: 2 }}>
+                                    <Grid item xs={4} sx={{ flex: 1, textAlign: 'right' }}>
                                         <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {r.hist[1] && r.hist[1].date ? `(${dateShort(r.hist[1].date)})` : ''}</Typography>
                                         <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[1] && r.hist[1].marketValue !== null ? fmtRoundUp(r.hist[1].marketValue) : '-'}</Typography>
                                     </Grid>
