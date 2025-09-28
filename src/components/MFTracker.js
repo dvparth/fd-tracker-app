@@ -59,9 +59,57 @@ function dateShort(d) {
     return `${parts[0]} ${m}`;
 }
 
+function monthLabelShort(d) {
+    // d expected 'DD-MM-YYYY' -> return '26-Sep'
+    if (!d) return '-';
+    const parts = d.split('-');
+    if (parts.length !== 3) return d;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const m = months[Number(parts[1]) - 1] || parts[1];
+    const dd = parts[0];
+    return `${dd}-${m}`;
+}
+
 function toTitleCase(str) {
     if (!str) return '';
     return String(str).toLowerCase().split(/\s+/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+}
+// parse DD-MM-YYYY -> Date
+function parseDMY(d) {
+    if (!d) return null;
+    const parts = d.split('-');
+    if (parts.length !== 3) return null;
+    const dd = Number(parts[0]);
+    const mm = Number(parts[1]) - 1;
+    const yyyy = Number(parts[2]);
+    return new Date(yyyy, mm, dd);
+}
+
+// format Date -> DD-MM-YYYY
+function formatDMY(date) {
+    if (!date) return '';
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = String(date.getFullYear());
+    return `${dd}-${mm}-${yyyy}`;
+}
+
+function findNearestEntry(entries, targetDate) {
+    if (!entries || entries.length === 0 || !targetDate) return null;
+    const targetTime = targetDate.getTime();
+    let best = null;
+    let bestDiff = Infinity;
+    for (const e of entries) {
+        if (!e || !e.date || !e.nav) continue;
+        const ed = parseDMY(e.date);
+        if (!ed) continue;
+        const diff = Math.abs(ed.getTime() - targetTime);
+        if (diff < bestDiff) {
+            bestDiff = diff;
+            best = e;
+        }
+    }
+    return best;
 }
 
 export default function MFTracker() {
@@ -102,6 +150,7 @@ export default function MFTracker() {
                         profit,
                         prevDelta,
                         hist: [{ date: entries[1] && entries[1].date ? entries[1].date : null, nav: nav1, marketValue: mv1 }, { date: entries[2] && entries[2].date ? entries[2].date : null, nav: nav2, marketValue: mv2 }],
+                        entries,
                         latestDate,
                     };
                 }
@@ -115,6 +164,7 @@ export default function MFTracker() {
                     profit: null,
                     prevDelta: null,
                     hist: [{ date: null, nav: null, marketValue: null }, { date: null, nav: null, marketValue: null }],
+                    entries: [],
                     latestDate: null,
                 };
             });
@@ -129,19 +179,7 @@ export default function MFTracker() {
 
     useEffect(() => { load(); }, []);
 
-    // totals (profit and previous NAV delta)
-    const totals = rows.reduce((acc, r) => {
-        acc.principal += Number(r.principal || 0);
-        acc.marketValue += Number(r.marketValue || 0);
-        acc.profit += Number(r.profit || 0);
-        acc.prevDelta += Number(r.prevDelta || 0);
-        acc.prev1 += Number((r.hist[0] && r.hist[0].marketValue) || 0);
-        acc.prev2 += Number((r.hist[1] && r.hist[1].marketValue) || 0);
-        return acc;
-    }, { principal: 0, marketValue: 0, profit: 0, prevDelta: 0, prev1: 0, prev2: 0 });
-
-    const totalsProfitPct = totals.principal ? (totals.profit / totals.principal) * 100 : null;
-    const totalsPrevDeltaPct = totals.prev1 ? (totals.prevDelta / totals.prev1) * 100 : null;
+    // We'll compute totals after we derive per-row month values (rowsWithMonths)
 
     if (loading) {
         return (
@@ -161,14 +199,60 @@ export default function MFTracker() {
     }
 
     const latestDate = rows.reduce((acc, r) => r.latestDate && (!acc || r.latestDate > acc) ? r.latestDate : acc, null);
-    const prevDate = rows.reduce((acc, r) => acc || (r.hist && r.hist[0] && r.hist[0].date) || null, null);
-    const prev2Date = rows.reduce((acc, r) => acc || (r.hist && r.hist[1] && r.hist[1].date) || null, null);
+
+    // compute target dates relative to latestDate: 1,2,3 months back
+    let monthTargets = [null, null, null];
+    if (latestDate) {
+        const base = parseDMY(latestDate);
+        if (base) {
+            monthTargets = [1, 2, 3].map(i => {
+                const d = new Date(base.getTime());
+                d.setMonth(d.getMonth() - i);
+                return d;
+            });
+        }
+    }
+
+    const month1Label = monthTargets[0] ? monthLabelShort(formatDMY(monthTargets[0])) : '';
+    const month2Label = monthTargets[1] ? monthLabelShort(formatDMY(monthTargets[1])) : '';
+    const month3Label = monthTargets[2] ? monthLabelShort(formatDMY(monthTargets[2])) : '';
+
+    // Derive per-row month values (nearest NAV to each month target)
+    const rowsWithMonths = rows.map(r => {
+        const entries = r.entries || [];
+        const months = monthTargets.map(t => {
+            if (!t) return { date: null, marketValue: null };
+            const found = findNearestEntry(entries, t);
+            if (!found || !found.nav) return { date: null, marketValue: null };
+            const nav = parseFloat(found.nav);
+            const mv = (Number.isFinite(nav) && r.unit) ? (nav * r.unit) : null;
+            return { date: found.date, marketValue: mv };
+        });
+        return { ...r, months };
+    });
+
+    // totals computed from rowsWithMonths
+    const totals = rowsWithMonths.reduce((acc, r) => {
+        acc.principal += Number(r.principal || 0);
+        acc.marketValue += Number(r.marketValue || 0);
+        acc.profit += Number(r.profit || 0);
+        acc.prevDelta += Number(r.prevDelta || 0);
+        acc.month1 += Number((r.months && r.months[0] && r.months[0].marketValue) || 0);
+        acc.month2 += Number((r.months && r.months[1] && r.months[1].marketValue) || 0);
+        acc.month3 += Number((r.months && r.months[2] && r.months[2].marketValue) || 0);
+        return acc;
+    }, { principal: 0, marketValue: 0, profit: 0, prevDelta: 0, month1: 0, month2: 0, month3: 0 });
+
+    const totalsProfitPct = totals.principal ? (totals.profit / totals.principal) * 100 : null;
+    const totalsPrevDeltaPct = totals.month1 ? (totals.prevDelta / totals.month1) * 100 : null;
 
     // color tokens for the 1 Day change chip
     const changeVal = totals.prevDelta;
     const changeBg = changeVal > 0 ? 'rgba(0,184,148,0.08)' : changeVal < 0 ? 'rgba(255,107,107,0.08)' : '#ffffff';
     const changeBorder = changeVal > 0 ? '#00b894' : changeVal < 0 ? '#ff6b6b' : '#e6eef6';
     const changeText = profitColor(changeVal);
+
+
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto' }}>
@@ -218,16 +302,20 @@ export default function MFTracker() {
                             </Box>
                         </Grid>
 
-                        {/* Row 3: dedicated row for Prev and Prev 2 */}
+                        {/* Row 3: Month values (month1 = latest, month2 = prev, month3 = prev2) */}
                         <Grid item xs={12} sx={{ mt: 0.25 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 2 }}>
                                 <Box sx={{ textAlign: 'left', flex: 1 }}>
-                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {prevDate ? `(${dateShort(prevDate)})` : ''}</Typography>
-                                    <Typography sx={{ fontWeight: 800 }}>₹{fmtRoundUp(totals.prev1)}</Typography>
+                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{month1Label}</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: (Number(totals.month1) > Number(totals.marketValue) ? '#00b894' : '#0f1724') }}>₹{fmtRoundUp(totals.month1)}</Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{month2Label}</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: (Number(totals.month2) > Number(totals.marketValue) ? '#00b894' : '#0f1724') }}>₹{fmtRoundUp(totals.month2)}</Typography>
                                 </Box>
                                 <Box sx={{ textAlign: 'right', flex: 1 }}>
-                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {prev2Date ? `(${dateShort(prev2Date)})` : ''}</Typography>
-                                    <Typography sx={{ fontWeight: 800 }}>₹{fmtRoundUp(totals.prev2)}</Typography>
+                                    <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{month3Label}</Typography>
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', color: (Number(totals.month3) > Number(totals.marketValue) ? '#00b894' : '#0f1724') }}>₹{fmtRoundUp(totals.month3)}</Typography>
                                 </Box>
                             </Box>
                         </Grid>
@@ -237,7 +325,7 @@ export default function MFTracker() {
 
             {/* List of schemes - mobile first cards with accordion */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {rows.map((r) => {
+                {rowsWithMonths.map((r) => {
                     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
                     const profitPct = (r.principal && r.profit !== null) ? ((r.profit / r.principal) * 100) : null;
                     return (
@@ -279,21 +367,26 @@ export default function MFTracker() {
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Grid container spacing={1} alignItems="center">
-                                    <Grid item xs={4} sx={{ flex: 1 }}>
+                                    <Grid item xs={3} sx={{ flex: 1 }}>
                                         <Typography sx={{ fontSize: '0.72rem', color: '#6b7280' }}>Invested</Typography>
                                         <Typography sx={{ fontWeight: 700, color: '#0f1724' }}>₹ {fmtRoundUp(r.principal)}</Typography>
                                     </Grid>
-                                    <Grid item xs={4} sx={{ flex: 1, textAlign: 'center' }}>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {r.hist[0] && r.hist[0].date ? `(${dateShort(r.hist[0].date)})` : ''}</Typography>
-                                        <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[0] && r.hist[0].marketValue !== null ? fmtRoundUp(r.hist[0].marketValue) : '-'}</Typography>
+                                    <Grid item xs={3} sx={{ flex: 1, textAlign: 'center' }}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{r.months && r.months[0] && r.months[0].date ? monthLabelShort(r.months[0].date) : month1Label}</Typography>
+                                        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: (r.months && r.months[0] && Number(r.months[0].marketValue) > Number(r.marketValue) ? '#00b894' : '#0f1724') }}>₹ {r.months && r.months[0] && r.months[0].marketValue !== null ? fmtRoundUp(r.months[0].marketValue) : '-'}</Typography>
                                     </Grid>
-                                    <Grid item xs={4} sx={{ flex: 1, textAlign: 'right' }}>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev 2 {r.hist[1] && r.hist[1].date ? `(${dateShort(r.hist[1].date)})` : ''}</Typography>
-                                        <Typography sx={{ fontWeight: 700 }}>₹ {r.hist[1] && r.hist[1].marketValue !== null ? fmtRoundUp(r.hist[1].marketValue) : '-'}</Typography>
+                                    <Grid item xs={3} sx={{ flex: 1, textAlign: 'center' }}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{r.months && r.months[1] && r.months[1].date ? monthLabelShort(r.months[1].date) : month2Label}</Typography>
+                                        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: (r.months && r.months[1] && Number(r.months[1].marketValue) > Number(r.marketValue) ? '#00b894' : '#0f1724') }}>₹ {r.months && r.months[1] && r.months[1].marketValue !== null ? fmtRoundUp(r.months[1].marketValue) : '-'}</Typography>
+                                    </Grid>
+                                    <Grid item xs={3} sx={{ flex: 1, textAlign: 'right' }}>
+                                        <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>{r.months && r.months[2] && r.months[2].date ? monthLabelShort(r.months[2].date) : month3Label}</Typography>
+                                        <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: (r.months && r.months[2] && Number(r.months[2].marketValue) > Number(r.marketValue) ? '#00b894' : '#0f1724') }}>₹ {r.months && r.months[2] && r.months[2].marketValue !== null ? fmtRoundUp(r.months[2].marketValue) : '-'}</Typography>
                                     </Grid>
                                     <Grid item xs={12}>
                                         <Divider sx={{ my: 1 }} />
                                     </Grid>
+                                    {/* sparkline removed per design */}
                                     {/* removed action buttons per request */}
                                 </Grid>
                             </AccordionDetails>
