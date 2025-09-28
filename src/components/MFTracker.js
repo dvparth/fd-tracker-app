@@ -164,6 +164,12 @@ export default function MFTracker() {
     const prevDate = rows.reduce((acc, r) => acc || (r.hist && r.hist[0] && r.hist[0].date) || null, null);
     const prev2Date = rows.reduce((acc, r) => acc || (r.hist && r.hist[1] && r.hist[1].date) || null, null);
 
+    // color tokens for the 1 Day change chip
+    const changeVal = totals.prevDelta;
+    const changeBg = changeVal > 0 ? 'rgba(0,184,148,0.08)' : changeVal < 0 ? 'rgba(255,107,107,0.08)' : '#ffffff';
+    const changeBorder = changeVal > 0 ? '#00b894' : changeVal < 0 ? '#ff6b6b' : '#e6eef6';
+    const changeText = profitColor(changeVal);
+
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -179,41 +185,41 @@ export default function MFTracker() {
             </Box>
 
             {/* Top summary card - strict 3-column alignment */}
-            <Card elevation={4} sx={{ mb: 1.5, borderRadius: 2, background: 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: '0 8px 24px rgba(31,42,68,0.06)' }}>
-                <CardContent>
-                    <Grid container spacing={4} alignItems="center" sx={{ columnGap: 3 }}>
+            <Card elevation={4} sx={{ mb: 1.25, borderRadius: 2, background: 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: '0 6px 18px rgba(31,42,68,0.05)' }}>
+                <CardContent sx={{ py: 1, px: { xs: 1.25, sm: 2 } }}>
+                    <Grid container spacing={2} alignItems="center" sx={{ columnGap: 2 }}>
                         {/* Row 1: 3 columns for perfect alignment */}
-                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80 }}>
+                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 56 }}>
                             <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Current Value</Typography>
-                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.marketValue)}</Typography>
-                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{latestDate ? dateShort(latestDate) : ''}</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.marketValue)}</Typography>
+                            <Typography sx={{ fontSize: '0.60rem', color: '#7a8696', mt: 0.35 }}>{latestDate ? dateShort(latestDate) : ''}</Typography>
                         </Grid>
-                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80, alignItems: 'center' }}>
+                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 56, alignItems: 'center' }}>
                             <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Invested</Typography>
-                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.principal)}</Typography>
-                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{rows.length} schemes</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f1724' }}>₹{fmtRoundUp(totals.principal)}</Typography>
+                            <Typography sx={{ fontSize: '0.60rem', color: '#7a8696', mt: 0.35 }}>{rows.length} schemes</Typography>
                         </Grid>
-                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 80, alignItems: 'flex-end' }}>
+                        <Grid item xs={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 56, alignItems: 'flex-end' }}>
                             <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>Profit / Loss</Typography>
-                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '1.02rem', color: profitColor(totals.profit) }}>₹{fmtRoundUp(totals.profit)}</Typography>
-                            <Typography sx={{ fontSize: '0.66rem', color: '#7a8696', mt: 0.5 }}>{totalsProfitPct !== null ? `(${totalsProfitPct.toFixed(2)}%)` : ''}</Typography>
+                            <Typography noWrap sx={{ fontWeight: 800, fontSize: '0.95rem', color: profitColor(totals.profit) }}>₹{fmtRoundUp(totals.profit)}</Typography>
+                            <Typography sx={{ fontSize: '0.60rem', color: '#7a8696', mt: 0.35 }}>{totalsProfitPct !== null ? `(${totalsProfitPct.toFixed(2)}%)` : ''}</Typography>
                         </Grid>
 
                         {/* Row 2: 1 Day change (left aligned) - own dedicated row */}
                         <Grid item xs={12}>
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', py: 0.75 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, bgcolor: '#ffffff', borderRadius: 2, boxShadow: '0 4px 12px rgba(15,23,36,0.04)' }}>
-                                    {totals.prevDelta > 0 ? <ArrowUpwardIcon sx={{ color: accentColor(totals.prevDelta), fontSize: '1.05rem' }} /> : totals.prevDelta < 0 ? <ArrowDownwardIcon sx={{ color: accentColor(totals.prevDelta), fontSize: '1.05rem' }} /> : null}
-                                    <Box sx={{ textAlign: 'left' }}>
-                                        <Typography sx={{ fontWeight: 800, color: profitColor(totals.prevDelta), fontSize: '0.98rem' }}>1 Day change: ₹ {fmtRoundUp(totals.prevDelta)}</Typography>
-                                        <Typography sx={{ fontSize: '0.72rem', color: '#556475' }}>{totalsPrevDeltaPct !== null ? `(${totalsPrevDeltaPct.toFixed(2)}%)` : ''}</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', py: 0.4 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 1.25, bgcolor: changeBg, borderRadius: 1.5, boxShadow: '0 3px 10px rgba(15,23,36,0.03)', border: `1px solid ${changeBorder}` }}>
+                                    {totals.prevDelta > 0 ? <ArrowUpwardIcon sx={{ color: changeBorder, fontSize: '0.95rem' }} /> : totals.prevDelta < 0 ? <ArrowDownwardIcon sx={{ color: changeBorder, fontSize: '0.95rem' }} /> : null}
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 0.75 }}>
+                                        <Typography noWrap sx={{ fontWeight: 800, color: changeText, fontSize: '0.9rem' }}>1 Day change: ₹ {fmtRoundUp(totals.prevDelta)}</Typography>
+                                        <Typography noWrap sx={{ fontSize: '0.64rem', color: changeText }}>{totalsPrevDeltaPct !== null ? `(${totalsPrevDeltaPct.toFixed(2)}%)` : ''}</Typography>
                                     </Box>
                                 </Box>
                             </Box>
                         </Grid>
 
                         {/* Row 3: dedicated row for Prev and Prev 2 */}
-                        <Grid item xs={12} sx={{ mt: 0.5 }}>
+                        <Grid item xs={12} sx={{ mt: 0.25 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 2 }}>
                                 <Box sx={{ textAlign: 'left', flex: 1 }}>
                                     <Typography sx={{ fontSize: '0.72rem', color: '#666' }}>Prev {prevDate ? `(${dateShort(prevDate)})` : ''}</Typography>
