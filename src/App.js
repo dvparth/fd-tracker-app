@@ -5,9 +5,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { DataGrid } from '@mui/x-data-grid';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import DepositForm from './DepositForm';
 import { fetchDeposits, deleteDeposit } from './slices/depositsSlice';
-import CustomDialog from './components/CustomDialog';
 import FeedbackSnackbar from './components/FeedbackSnackbar';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,6 +14,7 @@ import Button from '@mui/material/Button';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import './index.css';
 import MFHoldings from './components/MFHoldings';
+import MFTracker from './components/MFTracker';
 
 /**
  * Main App component.
@@ -29,7 +28,6 @@ function App() {
     }, [dispatch]);
     const { items, status, error } = useSelector(state => state.deposits);
     const [editDeposit, setEditDeposit] = useState(null);
-    const [addOpen, setAddOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -48,12 +46,7 @@ function App() {
     /**
      * Opens the add dialog.
      */
-    const handleAddOpen = () => setAddOpen(true);
-
-    /**
-     * Closes the add dialog.
-     */
-    const handleAddClose = () => setAddOpen(false);
+    // add dialog removed - this app uses MFTracker only
 
     /**
      * Refreshes the deposit list.
@@ -136,144 +129,10 @@ function App() {
 
     return (
         <div style={{ minHeight: '100vh', background: darkMode ? '#18181b' : '#f6fafd' }}>
-            <Box sx={{ px: 2, py: 1 }}>
-                <Link to="/mf-holdings" style={{ marginRight: 12, color: '#635bff', fontWeight: 600 }}>MF Holdings</Link>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2, mt: 2, px: { xs: 1, sm: 2 } }}>
-                <Typography variant="h5" fontWeight={700} sx={{ color: '#635bff', fontSize: { xs: '1.3rem', sm: '2rem' } }}>Deposit Tracker</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: { xs: 2, sm: 0 } }}>
-                    <Switch
-                        checked={darkMode}
-                        onChange={e => setDarkMode(e.target.checked)}
-                        inputProps={{ 'aria-label': 'toggle dark mode' }}
-                        sx={{ mr: 1 }}
-                    />
-                    <span style={{ color: '#635bff', fontWeight: 500, fontSize: '1rem' }}>Dark Mode</span>
-                    <button onClick={handleAddOpen} style={{ padding: '8px 16px', background: '#635bff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600, fontSize: '1rem', cursor: 'pointer', boxShadow: '0 2px 8px #635bff22', marginLeft: 8 }}>
-                        + Add
-                    </button>
-                </Box>
-            </Box>
+            <Box sx={{ px: 0, py: 0 }} />
             <Routes>
-                <Route path="/" element={(
-                    <Box sx={{ height: { xs: 420, sm: 600 }, width: '100vw', maxWidth: '100%', mx: 'auto', px: { xs: 0, sm: 2 }, background: darkMode ? '#23232b' : '#fff', borderRadius: { xs: 0, sm: 2 }, boxShadow: { xs: 0, sm: 2 }, mt: 1, overflow: 'auto' }}>
-                        <DataGrid
-                            rows={rows}
-                            columns={columns}
-                            pageSize={10}
-                            rowsPerPageOptions={[10, 25, 50]}
-                            disableSelectionOnClick
-                            autoHeight={false}
-                            sx={{
-                                fontSize: { xs: '0.85rem', sm: '0.90rem' },
-                                background: darkMode ? '#23232b' : '#fff',
-                                color: darkMode ? '#f3f6fb' : '#222',
-                                '& .MuiDataGrid-row': {
-                                    cursor: 'pointer',
-                                    minHeight: { xs: '24px', sm: '28px' },
-                                    maxHeight: { xs: '24px', sm: '28px' },
-                                    transition: 'background 0.3s, box-shadow 0.3s',
-                                },
-                                '& .MuiDataGrid-cell': {
-                                    padding: { xs: '2px 2px', sm: '2px 6px' },
-                                    fontSize: { xs: '0.85rem', sm: '0.90rem' },
-                                    transition: 'color 0.3s',
-                                    border: '1px solid #e0e0e0',
-                                    borderColor: darkMode ? '#444' : '#e0e0e0',
-                                },
-                                '& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader, & .MuiDataGrid-columnHeaderTitle': {
-                                    background: darkMode ? '#18181b !important' : '#f9f9ff !important',
-                                    color: darkMode ? '#f3f6fb !important' : '#23234a !important',
-                                    fontWeight: 800,
-                                    fontSize: { xs: '1rem', sm: '1.1rem' },
-                                    letterSpacing: 0.2,
-                                    textShadow: 'none',
-                                    minHeight: { xs: '28px', sm: '32px' },
-                                    maxHeight: { xs: '28px', sm: '32px' },
-                                    borderBottom: '1px solid #635bff',
-                                },
-                                '& .MuiDataGrid-columnHeaderTitle': {
-                                    color: darkMode ? '#f3f6fb' : '#23234a',
-                                    fontWeight: 800,
-                                    fontSize: { xs: '1rem', sm: '1.1rem' },
-                                    letterSpacing: 0.2,
-                                    textShadow: 'none',
-                                },
-                                '& .MuiDataGrid-row:hover': {
-                                    background: darkMode ? '#282a36' : '#e3e8ff',
-                                    boxShadow: darkMode ? '0 2px 8px #282a3622' : '0 2px 8px #635bff22',
-                                },
-                                '& .editing-row': {
-                                    background: '#ffe3e3 !important',
-                                    boxShadow: '0 0 0 2px #ff6b6b',
-                                },
-                                '& .MuiDataGrid-cell[data-field="srNo"]': {
-                                    textAlign: 'right',
-                                },
-                                '& .MuiDataGrid-cell[data-field="principal"]': {
-                                    textAlign: 'right',
-                                },
-                                '& .MuiDataGrid-cell[data-field="interest"]': {
-                                    textAlign: 'right',
-                                },
-                                '& .MuiDataGrid-cell[data-field="beforeTds"]': {
-                                    textAlign: 'right',
-                                },
-                            }}
-                            onRowDoubleClick={(params) => handleEditOpen(params.row)}
-                            getRowClassName={(params) => editDeposit && params.row._id === editDeposit._id ? 'editing-row' : ''}
-                        />
-                    </Box>
-                )} />
-                <Route path="/mf-holdings" element={<MFHoldings />} />
+                <Route path="/" element={<MFTracker />} />
             </Routes>
-
-            {/* Add Dialog */}
-            <CustomDialog
-                open={addOpen}
-                onClose={handleAddClose}
-                title="Add Deposit"
-                darkMode={darkMode}
-            >
-                <DepositForm
-                    srNo={rows.length + 1}
-                    onSuccess={handleAddClose}
-                    darkMode={darkMode}
-                    autoFocus
-                />
-            </CustomDialog>
-            {/* Edit Dialog */}
-            <CustomDialog
-                open={!!editDeposit}
-                onClose={handleEditClose}
-                title="Edit Deposit"
-                darkMode={darkMode}
-            >
-                <DepositForm
-                    deposit={editDeposit}
-                    onSubmit={handleEditSubmit}
-                    onSuccess={handleEditClose}
-                    isEdit={true}
-                    darkMode={darkMode}
-                    autoFocus
-                />
-            </CustomDialog>
-            {/* Delete Confirmation Dialog */}
-            <CustomDialog
-                open={!!deleteTarget}
-                onClose={handleDeleteCancel}
-                title="Confirm Delete"
-                darkMode={darkMode}
-            >
-                <WarningAmberIcon sx={{ fontSize: 48, color: darkMode ? '#ff6b6b' : '#b71c1c', mb: 2 }} />
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                    Are you sure you want to delete this deposit?
-                </Typography>
-                <Stack direction="row" spacing={2} justifyContent="center">
-                    <Button onClick={handleDeleteCancel} variant="outlined" color="inherit" sx={{ minWidth: 100, borderColor: darkMode ? '#aab4ff' : undefined, color: darkMode ? '#aab4ff' : undefined }}>Cancel</Button>
-                    <Button onClick={handleDeleteConfirm} variant="contained" color="error" sx={{ minWidth: 100 }}>Delete</Button>
-                </Stack>
-            </CustomDialog>
 
             {/* Delete Confirmation Snackbar */}
             <FeedbackSnackbar
