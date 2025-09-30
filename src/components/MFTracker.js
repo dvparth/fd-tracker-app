@@ -16,8 +16,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import axios from 'axios';
 import schemes from '../config/schemes.json';
+import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 
 function fmtAmount(v) {
     if (v === null || v === undefined || Number.isNaN(v)) return '-';
@@ -118,37 +118,47 @@ export default function MFTracker() {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
 
+    // Allow overriding the adapter via env var for testing. Prefer 'hybrid' when available so
+    // the RapidAPI latest endpoint is used to augment mfapi historical data.
+    const envAdapter = typeof process !== 'undefined' && process.env && process.env.REACT_APP_DATA_ADAPTER;
+    const dataAdapterKey = envAdapter || (availableAdapters.includes('hybrid') ? 'hybrid' : (availableAdapters.includes('mfapi') ? 'mfapi' : availableAdapters[0]));
+
     const load = async () => {
         setLoading(true);
         setError(null);
         try {
-            const promises = schemes.map(s => axios.get(`https://api.mfapi.in/mf/${s.scheme_code}`));
-            const settled = await Promise.allSettled(promises);
+            // fetch through adapter(s) to keep MFTracker decoupled from API shape
+            const settled = await Promise.allSettled(schemes.map(s => fetchSchemeDataUsingAdapter(dataAdapterKey, s)));
             const results = settled.map((res, idx) => {
                 const s = schemes[idx];
                 if (res.status === 'fulfilled') {
-                    const payload = res.value.data;
-                    const entries = payload && payload.data ? payload.data : [];
-                    const nav0 = entries[0] && entries[0].nav ? parseFloat(entries[0].nav) : null;
-                    const nav1 = entries[1] && entries[1].nav ? parseFloat(entries[1].nav) : null;
-                    const nav2 = entries[2] && entries[2].nav ? parseFloat(entries[2].nav) : null;
-                    const mv0 = nav0 !== null ? nav0 * s.unit : null;
-                    const mv1 = nav1 !== null ? nav1 * s.unit : null;
-                    const mv2 = nav2 !== null ? nav2 * s.unit : null;
-                    // profit = market value - invested principal
-                    const profit = mv0 !== null ? (mv0 - s.principal) : null;
-                    // previous NAV delta (mv0 - mv1)
-                    const prevDelta = (mv0 !== null && mv1 !== null) ? (mv0 - mv1) : null;
+                    // adapter guarantees canonical shape: { entries: [{date, nav}], meta: { scheme_name } }
+                    const payload = res.value || { entries: [], meta: { scheme_name: '' } };
+                    const entries = Array.isArray(payload.entries) ? payload.entries : [];
+                    // robustly parse NAVs and convert non-finite values to null to avoid NaN propagation
+                    let nav0 = entries[0] && entries[0].nav ? Number.parseFloat(entries[0].nav) : null;
+                    let nav1 = entries[1] && entries[1].nav ? Number.parseFloat(entries[1].nav) : null;
+                    let nav2 = entries[2] && entries[2].nav ? Number.parseFloat(entries[2].nav) : null;
+                    if (!Number.isFinite(nav0)) nav0 = null;
+                    if (!Number.isFinite(nav1)) nav1 = null;
+                    if (!Number.isFinite(nav2)) nav2 = null;
+                    const mv0 = (nav0 !== null) ? nav0 * s.unit : null;
+                    const mv1 = (nav1 !== null) ? nav1 * s.unit : null;
+                    const mv2 = (nav2 !== null) ? nav2 * s.unit : null;
+                    const profit = (mv0 !== null && Number.isFinite(mv0)) ? (mv0 - s.principal) : null;
+                    const prevDelta = (mv0 !== null && mv1 !== null && Number.isFinite(mv0) && Number.isFinite(mv1)) ? (mv0 - mv1) : null;
                     const latestDate = entries[0] && entries[0].date ? entries[0].date : null;
+                    const schemeName = (payload.meta && payload.meta.scheme_name) ? payload.meta.scheme_name : `Code ${s.scheme_code}`;
                     return {
                         scheme_code: s.scheme_code,
-                        scheme_name: payload && payload.meta && payload.meta.scheme_name ? payload.meta.scheme_name : `Code ${s.scheme_code}`,
+                        scheme_name: schemeName,
                         principal: s.principal,
                         unit: s.unit,
-                        nav: nav0,
-                        marketValue: mv0,
-                        profit,
-                        prevDelta,
+                        // ensure numeric fields are either finite numbers or null
+                        nav: nav0 !== null && Number.isFinite(nav0) ? nav0 : null,
+                        marketValue: mv0 !== null && Number.isFinite(mv0) ? mv0 : null,
+                        profit: profit !== null && Number.isFinite(profit) ? profit : null,
+                        prevDelta: prevDelta !== null && Number.isFinite(prevDelta) ? prevDelta : null,
                         hist: [{ date: entries[1] && entries[1].date ? entries[1].date : null, nav: nav1, marketValue: mv1 }, { date: entries[2] && entries[2].date ? entries[2].date : null, nav: nav2, marketValue: mv2 }],
                         entries,
                         latestDate,
@@ -252,6 +262,13 @@ export default function MFTracker() {
     const changeBorder = changeVal > 0 ? '#00b894' : changeVal < 0 ? '#ff6b6b' : '#e6eef6';
     const changeText = profitColor(changeVal);
 
+    // sort rows by marketValue descending for display (null/invalid marketValues go last)
+    const sortedRows = rowsWithMonths.slice().sort((a, b) => {
+        const av = Number.isFinite(a.marketValue) ? a.marketValue : -Infinity;
+        const bv = Number.isFinite(b.marketValue) ? b.marketValue : -Infinity;
+        return bv - av;
+    });
+
 
 
     return (
@@ -325,7 +342,7 @@ export default function MFTracker() {
 
             {/* List of schemes - mobile first cards with accordion */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {rowsWithMonths.map((r) => {
+                {sortedRows.map((r) => {
                     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
                     const profitPct = (r.principal && r.profit !== null) ? ((r.profit / r.principal) * 100) : null;
                     return (

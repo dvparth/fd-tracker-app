@@ -23,8 +23,10 @@ import MFTracker from './components/MFTracker';
 function App() {
     const dispatch = useDispatch();
     const [darkMode, setDarkMode] = useState(false);
+    // NOTE: fetchDeposits previously ran on mount and caused automatic calls to the backend.
+    // This app focuses on MFTracker which uses adapters for NAV data. We no longer auto-fetch deposits on mount.
     useEffect(() => {
-        dispatch(fetchDeposits());
+        // Intentionally left blank — fetchDeposits can be triggered manually via handleRefresh if needed.
     }, [dispatch]);
     const { items, status, error } = useSelector(state => state.deposits);
     const [editDeposit, setEditDeposit] = useState(null);

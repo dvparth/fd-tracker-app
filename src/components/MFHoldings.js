@@ -83,10 +83,15 @@ export default function MFHoldings() {
                 if (res.status === 'fulfilled') {
                     const data = res.value.data;
                     const entries = data && data.data ? data.data : [];
-                    const nav0 = entries[0] && entries[0].nav ? parseFloat(entries[0].nav) : null;
-                    const nav1 = entries[1] && entries[1].nav ? parseFloat(entries[1].nav) : null;
-                    const nav2 = entries[2] && entries[2].nav ? parseFloat(entries[2].nav) : null;
-                    const nav3 = entries[3] && entries[3].nav ? parseFloat(entries[3].nav) : null;
+                    const parseNav = (x) => {
+                        const v = x === undefined || x === null ? null : String(x).replace(/[^0-9.\-]/g, '').trim();
+                        const n = v ? Number.parseFloat(v) : null;
+                        return Number.isFinite(n) ? n : null;
+                    };
+                    const nav0 = entries[0] && (entries[0].nav || entries[0].Net_Asset_Value) ? parseNav(entries[0].nav || entries[0].Net_Asset_Value) : null;
+                    const nav1 = entries[1] && (entries[1].nav || entries[1].Net_Asset_Value) ? parseNav(entries[1].nav || entries[1].Net_Asset_Value) : null;
+                    const nav2 = entries[2] && (entries[2].nav || entries[2].Net_Asset_Value) ? parseNav(entries[2].nav || entries[2].Net_Asset_Value) : null;
+                    const nav3 = entries[3] && (entries[3].nav || entries[3].Net_Asset_Value) ? parseNav(entries[3].nav || entries[3].Net_Asset_Value) : null;
                     const marketValue = nav0 !== null ? nav0 * s.unit : null;
                     const profit = marketValue !== null ? marketValue - s.principal : null;
                     const marketValue1 = nav1 !== null ? nav1 * s.unit : null;
