@@ -47,7 +47,7 @@ function ensureCanonical(payload) {
         const spaceMatch = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
         if (spaceMatch) {
             const dd = String(spaceMatch[1]).padStart(2, '0');
-            const monStr = spaceMatch[2].slice(0,3).toLowerCase();
+            const monStr = spaceMatch[2].slice(0, 3).toLowerCase();
             const map = { jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' };
             const mm = map[monStr] || '01';
             return `${dd}-${mm}-${spaceMatch[3]}`;
