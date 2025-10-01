@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import runtimeConfig from '../config/runtimeConfig';
 
 /**
  * Canonical data shape used by the UI:
@@ -90,13 +91,84 @@ function ensureCanonical(payload) {
     return { entries, meta };
 }
 
+// --- RapidAPI batching helpers (module-level) ---
+// Collect scheme codes requested in a short window and fetch latest values in one CSV request.
+let rapidRequestQueue = new Set();
+let rapidBatchPromise = null;
+let rapidLastResponse = null;
+
+// Simple mfapi request cache to dedupe duplicate calls for the same scheme code
+// Keyed by scheme_code -> Promise resolving to canonical payload
+const mfapiRequestCache = new Map();
+
+async function triggerRapidBatchFetch(rapidKey, rapidHost) {
+    // If a batch is already in progress, return it
+    if (rapidBatchPromise) return rapidBatchPromise;
+    // schedule a microtask batch so concurrent hybrid() calls can enqueue codes
+    rapidBatchPromise = new Promise((resolve) => {
+        setTimeout(async () => {
+            const codes = Array.from(rapidRequestQueue).map(String).join(',');
+            // clear early so concurrent callers can enqueue for next batch
+            rapidRequestQueue.clear();
+            // batch triggered for codes: %s
+            if (!codes) {
+                rapidLastResponse = null;
+                rapidBatchPromise = null;
+                return resolve(null);
+            }
+            try {
+                const options = {
+                    method: 'GET',
+                    url: `https://${rapidHost}/latest`,
+                    params: {
+                        Scheme_Type: 'Open',
+                        Scheme_Code: codes
+                    },
+                    headers: {
+                        'x-rapidapi-key': rapidKey,
+                        'x-rapidapi-host': rapidHost
+                    }
+                };
+                // RapidAPI request options prepared
+                const r = await axios.request(options);
+                rapidLastResponse = Array.isArray(r && r.data) ? r.data : (r && r.data ? r.data : null);
+                // RapidAPI batch response received
+                resolve(rapidLastResponse);
+            } catch (err) {
+                // RapidAPI batch request failed
+                rapidLastResponse = null;
+                resolve(null);
+            } finally {
+                rapidBatchPromise = null;
+            }
+        }, 0);
+    });
+    return rapidBatchPromise;
+}
+
 const adapters = {
     // adapter for https://api.mfapi.in/mf/<scheme_code>
     mfapi: async (scheme) => {
-        const res = await axios.get(`https://api.mfapi.in/mf/${scheme.scheme_code}`);
-        const payload = res && res.data ? res.data : {};
-        // mfapi returns { meta, data }
-        return ensureCanonical({ entries: payload.data, meta: payload.meta });
+        const code = String(scheme.scheme_code);
+        if (mfapiRequestCache.has(code)) {
+            return mfapiRequestCache.get(code);
+        }
+        const p = (async () => {
+            const res = await axios.get(`https://api.mfapi.in/mf/${code}`);
+            const payload = res && res.data ? res.data : {};
+            // mfapi returns { meta, data }
+            return ensureCanonical({ entries: payload.data, meta: payload.meta });
+        })();
+        // store the promise so concurrent callers share it
+        mfapiRequestCache.set(code, p);
+        try {
+            const out = await p;
+            return out;
+        } catch (err) {
+            // remove cache on failure so subsequent retries can attempt again
+            mfapiRequestCache.delete(code);
+            throw err;
+        }
     },
 
     // Example adapter for a hypothetical other API - shows the expected transform
@@ -114,72 +186,32 @@ const adapters = {
         // mfapi fetch (historical) - we reuse the mfapi adapter
         const mfapiPromise = adapters.mfapi(scheme).catch(() => ({ entries: [], meta: {} }));
 
-        // RapidAPI latest endpoint (may require API key in env)
-        // RapidAPI key: check several possible runtime sources to make testing easier
-        const getRapidKeyAndSource = () => {
-            try {
-                // 1) Build-time env injected by CRA (available in the bundle as process.env)
-                if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_RAPIDAPI_KEY) {
-                    return { key: String(process.env.REACT_APP_RAPIDAPI_KEY).trim(), source: 'process.env.REACT_APP_RAPIDAPI_KEY' };
-                }
-                // 2) Explicit global on window (useful for injection in index.html)
-                if (typeof window !== 'undefined' && window.__RAPIDAPI_KEY__) {
-                    return { key: String(window.__RAPIDAPI_KEY__).trim(), source: 'window.__RAPIDAPI_KEY__' };
-                }
-                if (typeof window !== 'undefined' && window.RAPIDAPI_KEY) {
-                    return { key: String(window.RAPIDAPI_KEY).trim(), source: 'window.RAPIDAPI_KEY' };
-                }
-                // 3) URL query param for quick local testing: ?rapidapi_key=...
-                if (typeof window !== 'undefined') {
-                    const qp = new URLSearchParams(window.location.search).get('rapidapi_key');
-                    if (qp) return { key: String(qp).trim(), source: 'URL ?rapidapi_key' };
-                }
-                // 4) localStorage (convenient for browser testing)
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    const ls = window.localStorage.getItem('rapidapi_key');
-                    if (ls) return { key: String(ls).trim(), source: 'localStorage rapidapi_key' };
-                }
-                // 5) meta tag in index.html: <meta name="rapidapi-key" content="...">
-                if (typeof document !== 'undefined') {
-                    const el = document.querySelector('meta[name="rapidapi-key"]');
-                    if (el && el.content) return { key: String(el.content).trim(), source: 'meta[name=rapidapi-key]' };
-                }
-            } catch (e) {
-                // ignore access errors in SSR or restricted environments
-            }
-            return { key: '', source: null };
-        };
+        // Use centralized runtimeConfig for env/runtime detection
+        runtimeConfig.initRuntimeConfig();
+        const { key: rapidKey, source: rapidKeySource } = runtimeConfig.getRapidKeyAndSource();
+        const rapidHost = runtimeConfig.getRapidHost();
 
-        const { key: rapidKey, source: rapidKeySource } = getRapidKeyAndSource();
-        const rapidHost = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_RAPIDAPI_HOST) || (typeof window !== 'undefined' && window.__RAPIDAPI_HOST__) || 'latest-mutual-fund-nav.p.rapidapi.com';
-        let rapidPromise;
+        let rapidResp = null;
         if (!rapidKey) {
-            // skip rapid if no key provided and give actionable guidance
-            console.info('[hybrid adapter] RapidAPI key not found; skipping RapidAPI for', scheme.scheme_code, '\n  Provide a key via one of:\n    - REACT_APP_RAPIDAPI_KEY at build time\n    - Add ?rapidapi_key=YOUR_KEY to the URL for quick testing\n    - Set window.__RAPIDAPI_KEY__ or window.RAPIDAPI_KEY in the page\n    - localStorage.setItem("rapidapi_key", "YOUR_KEY")\n    - Add <meta name="rapidapi-key" content="YOUR_KEY"> to index.html');
-            rapidPromise = Promise.resolve(null);
+            // RapidAPI key not found; skipping RapidAPI for this scheme
         } else {
-            // mask key for logging (show last 4 chars)
+            // enqueue this scheme code and trigger a batched fetch
+            rapidRequestQueue.add(String(scheme.scheme_code));
+            // Enqueued scheme for RapidAPI batch
+            // trigger batch (microtask) and wait for response (shared across callers)
+            try {
+                const batchResult = await triggerRapidBatchFetch(rapidKey, rapidHost);
+                rapidResp = batchResult;
+            } catch (e) {
+                // triggerRapidBatchFetch threw an error
+                rapidResp = null;
+            }
+            // log summary info for debugging
             const masked = rapidKey.length > 6 ? `****${rapidKey.slice(-4)}` : '****';
-            console.info('[hybrid adapter] RapidAPI key found (%s) from %s — attempting RapidAPI latest for scheme %s', masked, rapidKeySource || 'unknown', scheme.scheme_code);
-            const options = {
-                method: 'GET',
-                url: `https://${rapidHost}/latest`,
-                params: {
-                    Scheme_Type: 'Open',
-                    Scheme_Code: String(scheme.scheme_code)
-                },
-                headers: {
-                    'x-rapidapi-key': rapidKey,
-                    'x-rapidapi-host': rapidHost
-                }
-            };
-            rapidPromise = axios.request(options).then(r => Array.isArray(r && r.data) ? r.data : null).catch((err) => {
-                console.warn('[hybrid adapter] RapidAPI request failed for', scheme.scheme_code, err && err.message ? err.message : err);
-                return null;
-            });
+            // RapidAPI batch processed for scheme
         }
 
-        const [mfapiResp, rapidResp] = await Promise.all([mfapiPromise, rapidPromise]);
+        const mfapiResp = await mfapiPromise;
 
         const mfPayload = ensureCanonical(mfapiResp || {});
 

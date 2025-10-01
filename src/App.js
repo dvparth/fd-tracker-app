@@ -6,14 +6,12 @@ import { DataGrid } from '@mui/x-data-grid';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import { fetchDeposits, deleteDeposit } from './slices/depositsSlice';
-import FeedbackSnackbar from './components/FeedbackSnackbar';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import './index.css';
-import MFHoldings from './components/MFHoldings';
 import MFTracker from './components/MFTracker';
 
 /**
@@ -136,13 +134,7 @@ function App() {
                 <Route path="/" element={<MFTracker />} />
             </Routes>
 
-            {/* Delete Confirmation Snackbar */}
-            <FeedbackSnackbar
-                open={snackbar.open}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                message={snackbar.message}
-                severity={snackbar.severity}
-            />
+            {/* snackbars removed (MFTracker handles its own feedback/UI) */}
         </div>
     );
 }

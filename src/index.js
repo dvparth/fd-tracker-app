@@ -1,41 +1,24 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-import store from './store';
-import App from './App';
-import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import MFTracker from './components/MFTracker';
+import './index.css';
 
-// Expose selected build-time env vars to window for adapters/quick-testing at runtime.
-// This helps the hybrid adapter detect RapidAPI settings without depending solely on process.env in bundled code.
-if (typeof window !== 'undefined') {
-    try {
-        // Note: CRA exposes REACT_APP_* vars on process.env at build/dev time.
-        window.__RAPIDAPI_KEY__ = window.__RAPIDAPI_KEY__ || process.env.REACT_APP_RAPIDAPI_KEY || '';
-        window.__RAPIDAPI_HOST__ = window.__RAPIDAPI_HOST__ || process.env.REACT_APP_RAPIDAPI_HOST || '';
-    } catch (e) {
-        // ignore in non-browser or restricted environments
+// Expose RapidAPI runtime keys on window for the hybrid adapter to detect at runtime.
+// This makes it easy to test locally via URL param, localStorage or build-time env.
+try {
+    if (typeof window !== 'undefined') {
+        // prefer existing window value (manual injection), else use build-time env
+        window.__RAPIDAPI_KEY__ = window.__RAPIDAPI_KEY__ || (process && process.env && process.env.REACT_APP_RAPIDAPI_KEY) || '';
+        window.__RAPIDAPI_HOST__ = window.__RAPIDAPI_HOST__ || (process && process.env && process.env.REACT_APP_RAPIDAPI_HOST) || 'latest-mutual-fund-nav.p.rapidapi.com';
+        // window runtime keys initialized (if present)
     }
-}
-
-function ThemeWrapper() {
-    const [mode, setMode] = useState(() => localStorage.getItem('muiThemeMode') || 'light');
-    useEffect(() => {
-        localStorage.setItem('muiThemeMode', mode);
-    }, [mode]);
-    const theme = useMemo(() => createTheme({ palette: { mode } }), [mode]);
-    return (
-        <ThemeProvider theme={theme}>
-            <App themeMode={mode} setThemeMode={setMode} />
-        </ThemeProvider>
-    );
+} catch (e) {
+    // ignore errors in unusual environments
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <Provider store={store}>
-        <BrowserRouter>
-            <ThemeWrapper />
-        </BrowserRouter>
-    </Provider>
+    <React.StrictMode>
+        <MFTracker />
+    </React.StrictMode>
 );
