@@ -16,7 +16,7 @@ export default function MFTracker() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
-    
+
 
     // Allow overriding the adapter via env var for testing. Prefer 'hybrid' when available so
     // the RapidAPI latest endpoint is used to augment mfapi historical data.
