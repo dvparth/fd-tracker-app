@@ -10,6 +10,8 @@ import schemes from '../config/schemes.json';
 import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 import SummaryCard from './SummaryCard';
 import SchemeAccordion from './SchemeAccordion';
+import BackToTop from './BackToTop';
+import './styles/header.css';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
 
 export default function MFTracker({ darkMode, setDarkMode }) {
@@ -92,13 +94,12 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
     useEffect(() => { load(); }, []);
 
-    // UI state for mobile hamburger and scrolling helpers (declare before any early returns)
-    const [menuOpen, setMenuOpen] = useState(false);
+    // UI state for scrolling helpers (declare before any early returns)
     const topRef = useRef(null);
 
     // smooth scroll helper
     const smoothScrollTo = (targetId) => {
-        setMenuOpen(false); // close menu on navigation
+        // close menu not needed (hamburger removed)
         const el = document.getElementById(targetId);
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -193,65 +194,50 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
     return (
-        <Box component="main" aria-label="mutual-fund-tracker" ref={topRef} sx={(t) => ({
-            p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
-            background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
-            boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
-            border: (t.palette && t.palette.mode === 'dark') ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(6px) saturate(110%)',
-            WebkitBackdropFilter: 'blur(6px) saturate(110%)'
-        })}>
-            {/* Sticky header with navigation */}
-            <Box component="header" className="sticky-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <Typography component="h1" sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
-                        <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.75rem', sm: '0.9rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+        <>
+            <a className="skip-link" href="#summary-card">Skip to summary</a>
+            <Box component="main" aria-label="mutual-fund-tracker" ref={topRef} sx={(t) => ({
+                p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
+                background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
+                boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
+                border: (t.palette && t.palette.mode === 'dark') ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(6px) saturate(110%)',
+                WebkitBackdropFilter: 'blur(6px) saturate(110%)'
+            })}>
+                {/* Sticky header with navigation */}
+                <Box component="header" className="sticky-header" sx={(t) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, color: 'text.primary', background: t.palette.mode === 'dark' ? 'rgba(8,8,12,0.6)' : 'rgba(255,255,255,0.95)', borderBottom: t.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,36,0.04)' })}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <Typography component="h1" sx={{ color: 'text.primary', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
+                            <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.75rem', sm: '0.9rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+                        </Box>
+                    </Box>
+
+                    {/* navigation links removed per design request */}
+
+                    <Box role="group" aria-label="controls">
+                        <Tooltip title="Refresh">
+                            <Button aria-label="Refresh data" onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
+                        </Tooltip>
+                        <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
+                            <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />
+                        </Box>
                     </Box>
                 </Box>
 
-                <nav className="main-nav" aria-label="Main navigation">
-                    <ul>
-                        <li><button type="button" onClick={() => smoothScrollTo('summary-card')}>Summary</button></li>
-                        <li><button type="button" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[0].scheme_code}` : '')}>Top Scheme</button></li>
-                        <li><button type="button" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[sortedRows.length - 1].scheme_code}` : '')}>Bottom Scheme</button></li>
-                    </ul>
-                </nav>
 
-                {/* Mobile hamburger */}
-                <div className={`hamburger ${menuOpen ? 'open' : ''}`} aria-hidden={false}>
-                    <button aria-label="Open menu" className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? '✕' : '☰'}</button>
-                    {menuOpen && (
-                        <div className="hamburger-menu" role="menu">
-                            <button role="menuitem" onClick={() => smoothScrollTo('summary-card')}>Summary</button>
-                            <button role="menuitem" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[0].scheme_code}` : '')}>Top Scheme</button>
-                            <button role="menuitem" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[sortedRows.length - 1].scheme_code}` : '')}>Bottom Scheme</button>
-                        </div>
-                    )}
-                </div>
 
-                <Box role="group" aria-label="controls">
-                    <Tooltip title="Refresh">
-                        <Button aria-label="Refresh data" onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
-                    </Tooltip>
-                    <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
-                        <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />
-                    </Box>
+                <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {sortedRows.map(r => (
+                        <SchemeAccordion key={r.scheme_code} r={r} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+                    ))}
                 </Box>
+
+                {/* Back to top button */}
+                <BackToTop onClick={scrollToTop} />
             </Box>
-
-
-
-            <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {sortedRows.map(r => (
-                    <SchemeAccordion key={r.scheme_code} r={r} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
-                ))}
-            </Box>
-
-            {/* Back to top button */}
-            <button className="back-to-top" aria-label="Back to top" onClick={scrollToTop}>↑ Top</button>
-        </Box>
+        </>
     );
 }
