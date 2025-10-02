@@ -1,7 +1,7 @@
 /* Force DataGrid header row background and font color in dark mode as a fallback */
-body[data-theme='dark'] .MuiDataGrid-columnHeaders,
-body[data-theme='dark'] .MuiDataGrid-columnHeader,
-body[data-theme='dark'] .MuiDataGrid-columnHeaderTitle {
+body[data-theme="dark"] .MuiDataGrid-columnHeaders,
+body[data-theme="dark"] .MuiDataGrid-columnHeader,
+body[data-theme="dark"] .MuiDataGrid-columnHeaderTitle {
   background: #18181b !important;
   color: #f3f6fb !important;
 }

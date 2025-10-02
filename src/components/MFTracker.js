@@ -175,7 +175,8 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
     return (
-        <Box sx={(t) => ({ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
+        <Box sx={(t) => ({
+            p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
             background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
             boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
             border: (t.palette && t.palette.mode === 'dark') ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(255,255,255,0.12)',
