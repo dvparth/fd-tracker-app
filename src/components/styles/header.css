@@ -9,7 +9,7 @@
   padding: 8px 12px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(15, 23, 36, 0.06);
-  border-bottom: 1px solid rgba(15,23,36,0.04);
+  border-bottom: 1px solid rgba(15, 23, 36, 0.04);
 }
 .sticky-header .main-nav ul {
   list-style: none;
@@ -25,7 +25,8 @@
   padding: 8px 10px;
   text-decoration: none;
   border-radius: 8px;
-  transition: background-color 160ms ease, color 160ms ease, transform 120ms ease;
+  transition: background-color 160ms ease, color 160ms ease,
+    transform 120ms ease;
 }
 .sticky-header .main-nav a:hover,
 .sticky-header .main-nav a:focus {
@@ -76,7 +77,10 @@
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
-.back-to-top:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(99,91,255,0.22); }
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(99, 91, 255, 0.22);
+}
 
 @media (max-width: 720px) {
   .sticky-header .main-nav {

@@ -21,8 +21,12 @@ body {
 }
 
 /* Base typography sizing for consistency */
-html { font-size: 16px; }
-body { line-height: 1.45; }
+html {
+  font-size: 16px;
+}
+body {
+  line-height: 1.45;
+}
 
 /* Prevent horizontal overflow on small devices */
 html,
@@ -56,9 +60,11 @@ a.MuiButton-root,
 button,
 .MuiButton-root,
 a {
-  transition: background-color 180ms ease, color 180ms ease, transform 140ms ease;
+  transition: background-color 180ms ease, color 180ms ease,
+    transform 140ms ease;
 }
-.MuiButton-root:hover, button:hover {
+.MuiButton-root:hover,
+button:hover {
   transform: translateY(-1px);
 }
 
@@ -67,7 +73,6 @@ a {
   padding-left: 12px;
   padding-right: 12px;
 }
-
 
 .MuiTableContainer-root {
   width: 100%;
@@ -112,9 +117,18 @@ a {
 }
 
 /* Ensure headings have clear hierarchy and spacing */
-h1 { font-size: 1.375rem; margin: 0 0 0.25rem 0; }
-h2 { font-size: 1.125rem; margin: 0 0 0.5rem 0; }
-h3 { font-size: 1rem; margin: 0 0 0.5rem 0; }
+h1 {
+  font-size: 1.375rem;
+  margin: 0 0 0.25rem 0;
+}
+h2 {
+  font-size: 1.125rem;
+  margin: 0 0 0.5rem 0;
+}
+h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+}
 
 .MuiTypography-h5 {
   font-size: 1.2rem;
