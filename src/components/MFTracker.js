@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
@@ -92,6 +92,23 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
     useEffect(() => { load(); }, []);
 
+    // UI state for mobile hamburger and scrolling helpers (declare before any early returns)
+    const [menuOpen, setMenuOpen] = useState(false);
+    const topRef = useRef(null);
+
+    // smooth scroll helper
+    const smoothScrollTo = (targetId) => {
+        setMenuOpen(false); // close menu on navigation
+        const el = document.getElementById(targetId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     // We'll compute totals after we derive per-row month values (rowsWithMonths)
 
     if (loading) {
@@ -174,8 +191,9 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
 
+
     return (
-        <Box component="main" aria-label="mutual-fund-tracker" sx={(t) => ({
+        <Box component="main" aria-label="mutual-fund-tracker" ref={topRef} sx={(t) => ({
             p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
             background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
             boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
@@ -183,11 +201,35 @@ export default function MFTracker({ darkMode, setDarkMode }) {
             backdropFilter: 'blur(6px) saturate(110%)',
             WebkitBackdropFilter: 'blur(6px) saturate(110%)'
         })}>
-            <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Box>
-                    <Typography component="h1" sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
-                    <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+            {/* Sticky header with navigation */}
+            <Box component="header" className="sticky-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography component="h1" sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
+                        <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.75rem', sm: '0.9rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+                    </Box>
                 </Box>
+
+                <nav className="main-nav" aria-label="Main navigation">
+                    <ul>
+                        <li><button type="button" onClick={() => smoothScrollTo('summary-card')}>Summary</button></li>
+                        <li><button type="button" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[0].scheme_code}` : '')}>Top Scheme</button></li>
+                        <li><button type="button" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[sortedRows.length - 1].scheme_code}` : '')}>Bottom Scheme</button></li>
+                    </ul>
+                </nav>
+
+                {/* Mobile hamburger */}
+                <div className={`hamburger ${menuOpen ? 'open' : ''}`} aria-hidden={false}>
+                    <button aria-label="Open menu" className="hamburger-btn" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? '✕' : '☰'}</button>
+                    {menuOpen && (
+                        <div className="hamburger-menu" role="menu">
+                            <button role="menuitem" onClick={() => smoothScrollTo('summary-card')}>Summary</button>
+                            <button role="menuitem" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[0].scheme_code}` : '')}>Top Scheme</button>
+                            <button role="menuitem" onClick={() => smoothScrollTo(sortedRows.length > 0 ? `scheme-${sortedRows[sortedRows.length - 1].scheme_code}` : '')}>Bottom Scheme</button>
+                        </div>
+                    )}
+                </div>
+
                 <Box role="group" aria-label="controls">
                     <Tooltip title="Refresh">
                         <Button aria-label="Refresh data" onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
@@ -200,13 +242,16 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
 
-            <SummaryCard totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+            <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {sortedRows.map(r => (
                     <SchemeAccordion key={r.scheme_code} r={r} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
                 ))}
             </Box>
+
+            {/* Back to top button */}
+            <button className="back-to-top" aria-label="Back to top" onClick={scrollToTop}>↑ Top</button>
         </Box>
     );
 }

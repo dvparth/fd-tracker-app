@@ -13,7 +13,7 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
     const profitPct = (r.principal && r.profit !== null) ? ((r.profit / r.principal) * 100) : null;
     return (
-        <Accordion component="article" aria-label={`scheme-${r.scheme_code}`}
+        <Accordion id={`scheme-${r.scheme_code}`} component="article" aria-label={`scheme-${r.scheme_code}`}
             key={r.scheme_code}
             disableGutters
             sx={(theme) => ({

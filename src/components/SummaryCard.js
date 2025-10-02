@@ -6,13 +6,13 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { fmtRoundUp, dateShort } from '../utils/formatters';
 
-export default function SummaryCard({ totals, latestDate, month1Label, month2Label, month3Label }) {
+export default function SummaryCard({ id, totals, latestDate, month1Label, month2Label, month3Label }) {
     const changeVal = totals.prevDelta;
     const changeText = changeVal > 0 ? 'success.main' : changeVal < 0 ? 'error.main' : 'text.secondary';
     const totalsPrevDeltaPct = totals.month1 ? (totals.prevDelta / totals.month1) * 100 : null;
 
     return (
-        <Card component="section" aria-label="summary-card" elevation={4} sx={(theme) => ({ mb: 1.25, borderRadius: 2, background: theme.palette.mode === 'dark' ? theme.palette.background.paper : 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: theme.palette.mode === 'dark' ? '0 6px 18px rgba(0,0,0,0.6)' : '0 6px 18px rgba(31,42,68,0.05)' })}>
+        <Card id={id} component="section" aria-label="summary-card" elevation={4} sx={(theme) => ({ mb: 1.25, borderRadius: 2, background: theme.palette.mode === 'dark' ? theme.palette.background.paper : 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: theme.palette.mode === 'dark' ? '0 6px 18px rgba(0,0,0,0.6)' : '0 6px 18px rgba(31,42,68,0.05)' })}>
             <CardContent sx={{ py: 1, px: { xs: 1.25, sm: 2 } }}>
                 <Grid container spacing={2} alignItems="center" sx={{ columnGap: 4, justifyContent: 'space-between' }}>
                     <Grid item xs={12} sm={7} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 64, pr: { sm: 2 } }}>
