@@ -53,6 +53,40 @@ body {
   color: #0f1724;
 }
 
+/* Prevent horizontal overflow on small devices */
+html,
+body {
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
+/* Increase touch targets for buttons/links */
+button,
+a.MuiButton-root,
+.MuiButton-root {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+/* Make MUI buttons more tappable on mobile */
+.MuiButton-root {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 .hero {
   width: 100%;
   max-width: 900px;
@@ -126,4 +160,70 @@ body {
 .MuiTypography-h5 {
   font-size: 1.2rem;
   font-family: "Montserrat", "Roboto", Arial, sans-serif;
+}
+
+/* Edit dialog responsive tweaks */
+.edit-dialog-paper {
+  max-width: 420px;
+}
+.edit-dialog-paper.mobile {
+  max-width: 90vw;
+}
+.edit-dialog-content {
+  padding: 32px 24px 24px 24px;
+}
+
+/* Small screen adjustments */
+@media (max-width: 480px) {
+  .hero {
+    margin: 24px 12px;
+    padding: 28px 12px;
+    border-radius: 20px;
+  }
+  .hero-title {
+    font-size: 1.6rem;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  .MuiTypography-root {
+    font-size: 0.95rem;
+  }
+  .MuiTableContainer-root {
+    margin: 16px 8px 0 8px;
+  }
+  .edit-dialog-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Extremely small screens: increase spacing and avoid cramped layout */
+  .hero {
+    padding: 20px 8px;
+    border-radius: 16px;
+  }
+  .hero-title {
+    font-size: 1.35rem;
+  }
+  .hero-subtitle {
+    font-size: 0.92rem;
+  }
+  .edit-dialog-form {
+    gap: 12px;
+  }
+  .edit-dialog-close {
+    font-size: 1.6rem !important;
+  }
+  .MuiButton-root,
+  button {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+  .MuiPaper-root {
+    border-radius: 12px !important;
+  }
+  .MuiTypography-h3 {
+    font-size: 1.4rem;
+  }
 }

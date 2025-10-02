@@ -175,7 +175,7 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
     return (
-        <Box sx={(t) => ({
+        <Box component="main" aria-label="mutual-fund-tracker" sx={(t) => ({
             p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
             background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
             boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
@@ -183,14 +183,14 @@ export default function MFTracker({ darkMode, setDarkMode }) {
             backdropFilter: 'blur(6px) saturate(110%)',
             WebkitBackdropFilter: 'blur(6px) saturate(110%)'
         })}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Box component="header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                 <Box>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
-                    <Typography sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+                    <Typography component="h1" sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
+                    <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
                 </Box>
-                <Box>
+                <Box role="group" aria-label="controls">
                     <Tooltip title="Refresh">
-                        <Button onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
+                        <Button aria-label="Refresh data" onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
                     </Tooltip>
                     <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
                         <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />

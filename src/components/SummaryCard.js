@@ -12,11 +12,11 @@ export default function SummaryCard({ totals, latestDate, month1Label, month2Lab
     const totalsPrevDeltaPct = totals.month1 ? (totals.prevDelta / totals.month1) * 100 : null;
 
     return (
-        <Card elevation={4} sx={(theme) => ({ mb: 1.25, borderRadius: 2, background: theme.palette.mode === 'dark' ? theme.palette.background.paper : 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: theme.palette.mode === 'dark' ? '0 6px 18px rgba(0,0,0,0.6)' : '0 6px 18px rgba(31,42,68,0.05)' })}>
+        <Card component="section" aria-label="summary-card" elevation={4} sx={(theme) => ({ mb: 1.25, borderRadius: 2, background: theme.palette.mode === 'dark' ? theme.palette.background.paper : 'linear-gradient(135deg,#ffffff,#eef6ff)', boxShadow: theme.palette.mode === 'dark' ? '0 6px 18px rgba(0,0,0,0.6)' : '0 6px 18px rgba(31,42,68,0.05)' })}>
             <CardContent sx={{ py: 1, px: { xs: 1.25, sm: 2 } }}>
                 <Grid container spacing={2} alignItems="center" sx={{ columnGap: 4, justifyContent: 'space-between' }}>
                     <Grid item xs={12} sm={7} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 64, pr: { sm: 2 } }}>
-                        <Typography sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: 'text.secondary' }}>Current Value</Typography>
+                        <Typography component="h2" sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: 'text.secondary' }}>Current Value</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
                             <Typography noWrap sx={{ fontWeight: 900, fontSize: { xs: '1.3rem', sm: '1.6rem' }, color: 'text.primary', lineHeight: 1 }}>{`₹${fmtRoundUp(totals.marketValue)}`}</Typography>
                         </Box>

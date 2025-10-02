@@ -13,7 +13,7 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
     const profitPct = (r.principal && r.profit !== null) ? ((r.profit / r.principal) * 100) : null;
     return (
-        <Accordion
+        <Accordion component="article" aria-label={`scheme-${r.scheme_code}`}
             key={r.scheme_code}
             disableGutters
             sx={(theme) => ({
@@ -27,10 +27,10 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
                 '&:hover .invested-amt': { color: theme.palette.text.primary, transform: 'translateY(-1px)' }
             })}
         >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`scheme-${r.scheme_code}-content`} id={`scheme-${r.scheme_code}-header`}>
                 <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '62%' }}>
-                        <Typography sx={{ fontSize: '0.98rem', fontWeight: 800, color: 'text.primary' }}>{toTitleCase(r.scheme_name)}</Typography>
+                        <Typography component="h3" sx={{ fontSize: '0.98rem', fontWeight: 800, color: 'text.primary' }}>{toTitleCase(r.scheme_name)}</Typography>
                         <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>{r.unit ? `${fmtUnit(r.unit)} units` : ''}</Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right', minWidth: 120 }}>
