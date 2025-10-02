@@ -8,8 +8,9 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
 import schemes from '../config/schemes.json';
 import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
-import SummaryCard from './SummaryCard';
-import SchemeAccordion from './SchemeAccordion';
+const SummaryCard = React.lazy(() => import('./SummaryCard'));
+const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
+import { Suspense } from 'react';
 import BackToTop from './BackToTop';
 import './styles/header.css';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
@@ -19,6 +20,10 @@ export default function MFTracker({ darkMode, setDarkMode }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
+    // Visible count for progressive rendering (declare with other hooks)
+    const [visibleCount, setVisibleCount] = useState(8);
+    // UI state for scrolling helpers (declare before any early returns)
+    const topRef = useRef(null);
 
 
     // Allow overriding the adapter via env var for testing. Prefer 'hybrid' when available so
@@ -92,10 +97,28 @@ export default function MFTracker({ darkMode, setDarkMode }) {
         }
     };
 
-    useEffect(() => { load(); }, []);
+    // Schedule the expensive data fetch during idle time so the browser can
+    // paint the initial UI faster. Falls back to a short timeout if
+    // requestIdleCallback isn't available.
+    useEffect(() => {
+        let idleId = null;
+        let timeoutId = null;
+        const run = () => { load(); };
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+            idleId = window.requestIdleCallback(run, { timeout: 300 });
+        } else {
+            // Small delay to allow initial paint and avoid blocking the main thread
+            timeoutId = window.setTimeout(run, 200);
+        }
+        return () => {
+            if (idleId && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+                window.cancelIdleCallback(idleId);
+            }
+            if (timeoutId) window.clearTimeout(timeoutId);
+        };
+    }, []);
 
-    // UI state for scrolling helpers (declare before any early returns)
-    const topRef = useRef(null);
+    // ...existing code...
 
     // smooth scroll helper
     const smoothScrollTo = (targetId) => {
@@ -190,6 +213,10 @@ export default function MFTracker({ darkMode, setDarkMode }) {
         return bv - av;
     });
 
+    // Progressive rendering: only render a subset of accordions initially to
+    // reduce JS work and improve Total Blocking Time. User can expand to load more.
+    const visibleRows = sortedRows.slice(0, visibleCount);
+
 
 
 
@@ -227,12 +254,30 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
 
 
-                <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+                <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress size={28} /></Box>}>
+                    <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+                </Suspense>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {sortedRows.map(r => (
-                        <SchemeAccordion key={r.scheme_code} r={r} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+                    {visibleRows.map(r => (
+                        <Suspense key={r.scheme_code} fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}><CircularProgress size={18} /></Box>}>
+                            {/* Reserve approx height to avoid Cumulative Layout Shift when content loads */}
+                            <Box sx={{ minHeight: 64 }}>
+                                <SchemeAccordion r={r} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
+                            </Box>
+                        </Suspense>
                     ))}
+
+                    {sortedRows.length > visibleCount && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                            <Button onClick={() => setVisibleCount(c => Math.min(sortedRows.length, c + 8))} size="small">Show more</Button>
+                        </Box>
+                    )}
+                    {visibleCount > 8 && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                            <Button onClick={() => setVisibleCount(8)} size="small">Show less</Button>
+                        </Box>
+                    )}
                 </Box>
 
                 {/* Back to top button */}
