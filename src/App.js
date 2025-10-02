@@ -13,6 +13,8 @@ import Button from '@mui/material/Button';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import './index.css';
 import MFTracker from './components/MFTracker';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
 /**
  * Main App component.
@@ -20,7 +22,7 @@ import MFTracker from './components/MFTracker';
  */
 function App() {
     const dispatch = useDispatch();
-    const [darkMode, setDarkMode] = useState(false);
+    const [darkMode, setDarkMode] = useState(true);
     // NOTE: fetchDeposits previously ran on mount and caused automatic calls to the backend.
     // This app focuses on MFTracker which uses adapters for NAV data. We no longer auto-fetch deposits on mount.
     useEffect(() => {
@@ -127,15 +129,36 @@ function App() {
         id: deposit._id,
     }));
 
-    return (
-        <div style={{ minHeight: '100vh', background: darkMode ? '#18181b' : '#f6fafd' }}>
-            <Box sx={{ px: 0, py: 0 }} />
-            <Routes>
-                <Route path="/" element={<MFTracker />} />
-            </Routes>
+    const theme = createTheme({
+        palette: (() => {
+            if (darkMode) return {
+                mode: 'dark',
+                primary: { main: '#635bff' },
+                background: { default: '#0b0b12', paper: '#0f1220' },
+                text: { primary: '#e6eef6', secondary: '#9aa4b2' },
+                divider: 'rgba(255,255,255,0.06)'
+            };
+            return {
+                mode: 'light',
+                primary: { main: '#635bff' },
+                background: { default: '#f6fafd', paper: '#ffffff' },
+                text: { primary: '#0f1724', secondary: '#556475' },
+                divider: 'rgba(15,23,36,0.08)'
+            };
+        })(),
+        typography: { fontFamily: 'Inter, Roboto, Arial' }
+    });
 
-            {/* snackbars removed (MFTracker handles its own feedback/UI) */}
-        </div>
+    return (
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <div style={{ minHeight: '100vh', background: (theme && theme.palette && theme.palette.background && theme.palette.background.default) || undefined }}>
+                <Box sx={{ px: 0, py: 0 }} />
+                <Routes>
+                    <Route path="/" element={<MFTracker darkMode={darkMode} setDarkMode={setDarkMode} />} />
+                </Routes>
+            </div>
+        </ThemeProvider>
     );
 }
 

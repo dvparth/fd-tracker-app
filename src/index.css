@@ -50,6 +50,7 @@ body {
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #e3e8ff 0%, #f6fafd 100%);
+  color: #0f1724;
 }
 
 .hero {
@@ -103,7 +104,6 @@ body {
 }
 
 .MuiPaper-root {
-  background: #fff !important;
   border-radius: 16px !important;
   box-shadow: 0 4px 24px rgba(99, 91, 255, 0.08) !important;
 }

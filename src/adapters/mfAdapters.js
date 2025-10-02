@@ -223,8 +223,13 @@ const adapters = {
             const codeNum = Number(scheme.scheme_code);
             const found = rapidResp.find(item => Number(item.Scheme_Code) === codeNum) || rapidResp[0];
             if (found) {
-                const latestEntry = { date: found.Date, nav: String(found.Net_Asset_Value) };
-                // prepend latestEntry if its date is different from current first entry
+                // RapidAPI date format can differ (e.g. '01-Oct-2025').
+                // Use ensureCanonical to normalize the latest entry so comparisons match mfapi's DD-MM-YYYY format.
+                const latestRaw = { date: found.Date, nav: String(found.Net_Asset_Value) };
+                const latestCanonicalPayload = ensureCanonical({ entries: [latestRaw] });
+                const latestEntry = (Array.isArray(latestCanonicalPayload.entries) && latestCanonicalPayload.entries[0]) ? latestCanonicalPayload.entries[0] : { date: null, nav: latestRaw.nav };
+
+                // prepend canonical latestEntry if its date is different from current first entry
                 if (!entries.length || entries[0].date !== latestEntry.date) {
                     entries.unshift(latestEntry);
                 } else {

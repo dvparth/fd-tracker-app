@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import Switch from '@mui/material/Switch';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
 import schemes from '../config/schemes.json';
@@ -11,7 +12,7 @@ import SummaryCard from './SummaryCard';
 import SchemeAccordion from './SchemeAccordion';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
 
-export default function MFTracker() {
+export default function MFTracker({ darkMode, setDarkMode }) {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -174,16 +175,25 @@ export default function MFTracker() {
 
 
     return (
-        <Box sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto' }}>
+        <Box sx={(t) => ({ p: { xs: 1.5, sm: 2 }, maxWidth: '980px', mx: 'auto', borderRadius: 2,
+            background: (t.palette && t.palette.mode === 'dark') ? 'linear-gradient(135deg, #070210 0%, #120428 40%, #1b0f3d 100%)' : 'linear-gradient(135deg, rgba(99,91,255,0.18), rgba(99,91,255,0.06))',
+            boxShadow: (t.palette && t.palette.mode === 'dark') ? '0 20px 60px rgba(6,6,20,0.75)' : '0 12px 40px rgba(99,91,255,0.12)',
+            border: (t.palette && t.palette.mode === 'dark') ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(6px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(6px) saturate(110%)'
+        })}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <div>
-                    <strong style={{ color: '#635bff', fontWeight: 900 }}>Parth Dave</strong>
-                    <span style={{ marginLeft: 10, color: '#374151', fontWeight: 700 }}>— Personal MF Snapshot</span>
-                </div>
+                <Box>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
+                    <Typography sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.85rem', sm: '0.95rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
+                </Box>
                 <Box>
                     <Tooltip title="Refresh">
                         <Button onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
                     </Tooltip>
+                    <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
+                        <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />
+                    </Box>
                 </Box>
             </Box>
 
