@@ -70,7 +70,6 @@ function App() {
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography variant="h6" sx={{ fontWeight: 900 }}>MF Tracker</Typography>
-                            <Typography variant="body2" color="text.secondary">Personal Snapshot</Typography>
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
