@@ -19,12 +19,28 @@ jest.mock('../../adapters/mfAdapters', () => ({
 }));
 
 import MFTracker from '../MFTracker';
-import schemes from '../../config/schemes.json';
+// Provide a small fixture for schemes metadata used in tests
+const schemes = [
+    { scheme_code: 147946, principal: 109454, unit: 2346.73 },
+    { scheme_code: 118269, principal: 38748, unit: 621.802 }
+];
 // import the mocked function to assert call counts
 const { fetchSchemeDataUsingAdapter } = require('../../adapters/mfAdapters');
 
 describe('MFTracker', () => {
     test('renders summary and scheme list after load', async () => {
+        // Mock global fetch for /schemes and /user/holdings endpoints
+        const originalFetch = global.fetch;
+        global.fetch = jest.fn((input, opts) => {
+            if (typeof input === 'string' && input.endsWith('/schemes')) {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ schemes }) });
+            }
+            if (typeof input === 'string' && input.endsWith('/user/holdings')) {
+                return Promise.resolve({ ok: true, json: () => Promise.resolve({ holdings: schemes.map(s => ({ scheme_code: s.scheme_code, principal: s.principal, unit: s.unit })) }) });
+            }
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        });
+
         render(<MFTracker darkMode={false} setDarkMode={() => { }} />);
 
         // loader should show initially
@@ -48,5 +64,8 @@ describe('MFTracker', () => {
 
         // After clicking refresh, progress indicator may appear; ensure it resolves
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+
+        // restore fetch
+        global.fetch = originalFetch;
     });
 });

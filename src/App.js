@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import HomeIcon from '@mui/icons-material/Home';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
 import Avatar from '@mui/material/Avatar';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -11,6 +14,7 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import './index.css';
 import MFTracker from './components/MFTracker';
+import HoldingsPage from './components/HoldingsPage';
 import Login from './auth/Login';
 import { useAuth } from './auth/useAuth';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -24,6 +28,7 @@ function App() {
     const [darkMode, setDarkMode] = useState(true);
     const { user, loading, setUser } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -70,6 +75,11 @@ function App() {
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography variant="h6" sx={{ fontWeight: 900 }}>MF Tracker</Typography>
+                            {!loading && user ? (
+                                <IconButton size="small" onClick={() => navigate(location.pathname === '/holdings' ? '/' : '/holdings')} sx={{ ml: 1 }} aria-label={location.pathname === '/holdings' ? 'home' : 'holdings'}>
+                                    {location.pathname === '/holdings' ? <HomeIcon /> : <ListAltIcon />}
+                                </IconButton>
+                            ) : null}
                         </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -98,6 +108,7 @@ function App() {
                 <Box sx={{ px: 0, py: 0 }} />
                 <Routes>
                     <Route path="/login" element={<Login />} />
+                    <Route path="/holdings" element={loading ? <div>Loading...</div> : (user ? <HoldingsPage /> : <Navigate to="/login" />)} />
                     <Route path="/" element={loading ? <div>Loading...</div> : (user ? <MFTracker darkMode={darkMode} setDarkMode={setDarkMode} /> : <Navigate to="/login" />)} />
                 </Routes>
             </div>

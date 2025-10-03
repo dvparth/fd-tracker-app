@@ -55,4 +55,41 @@ Notes on deposit feature removal
 
 Contact
 
+````markdown
+# FD Tracker App (frontend)
+
+This folder contains the Create-React-App frontend for the FD Tracker application.
+
+Quick start
+
+```powershell
+cd frontend
+npm install
+# in PowerShell you can set the backend url env and start
+$env:REACT_APP_BACKEND_URL = "http://localhost:5000"; npm start
+```
+
+Testing
+
+```powershell
+npm test -- --watchAll=false
+```
+
+Build (production)
+
+```powershell
+npm run build
+```
+
+Regeneration / Copilot helper
+
+- This frontend contains a concise regeneration prompt at `frontend/COPILOT_PROMPT.md`. Use it when you need to recreate the app or provide a full-context prompt to an LLM-based assistant. Keep the file up to date when you change routes, API contracts, or adapter shapes.
+
+Where to look
+
+- `src/adapters/mfAdapters.js` — adapters and network logic
+- `src/components/HoldingsPage.js` — holdings management UI
+- `src/components/HoldingForm.js` — holding add/edit form
+
 Maintainer: Parth Dave
+````

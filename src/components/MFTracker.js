@@ -2,11 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
+import LoadingButton from './LoadingButton';
+import '../components/styles/common.css';
 import Tooltip from '@mui/material/Tooltip';
 import Switch from '@mui/material/Switch';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
-import schemes from '../config/schemes.json';
+// schemes will be loaded from backend /schemes endpoint (fallback to frontend config during migration)
+import { useCallback } from 'react';
 import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 const SummaryCard = React.lazy(() => import('./SummaryCard'));
 const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
@@ -33,14 +36,21 @@ export default function MFTracker({ darkMode, setDarkMode }) {
     // debug: report which adapter is selected
     // Adapter selection determined by env/build-time or available adapters
 
+    const [manualLoading, setManualLoading] = useState(false);
     const load = async () => {
         setLoading(true);
         setError(null);
         try {
+            // Load user's tracked holdings and fetch NAVs using adapters. Do not call /schemes here.
+            const backend = process.env.REACT_APP_BACKEND_URL || '';
+            const holdingsRes = await fetch(`${backend}/user/holdings`, { credentials: 'include' });
+            const userHoldings = (await holdingsRes.json().catch(() => ({ holdings: [] }))).holdings || [];
+            // Build the tracked list from user holdings; adapter metadata (meta.scheme_name) will be used when available.
+            const tracked = userHoldings.map(h => ({ scheme_code: h.scheme_code, principal: h.principal || 0, unit: h.unit || 0 }));
             // fetch through adapter(s) to keep MFTracker decoupled from API shape
-            const settled = await Promise.allSettled(schemes.map(s => fetchSchemeDataUsingAdapter(dataAdapterKey, s)));
+            const settled = await Promise.allSettled(tracked.map(s => fetchSchemeDataUsingAdapter(dataAdapterKey, s)));
             const results = settled.map((res, idx) => {
-                const s = schemes[idx];
+                const s = tracked[idx];
                 if (res.status === 'fulfilled') {
                     // adapter guarantees canonical shape: { entries: [{date, nav}], meta: { scheme_name } }
                     const payload = res.value || { entries: [], meta: { scheme_name: '' } };
@@ -244,7 +254,7 @@ export default function MFTracker({ darkMode, setDarkMode }) {
 
                     <Box role="group" aria-label="controls">
                         <Tooltip title="Refresh">
-                            <Button aria-label="Refresh data" onClick={() => load()} startIcon={<RefreshIcon />} size="small">Refresh</Button>
+                            <LoadingButton aria-label="Refresh data" onClick={() => { setManualLoading(true); load().finally(() => setManualLoading(false)); }} startIcon={<RefreshIcon />} size="small" loading={manualLoading}>Refresh</LoadingButton>
                         </Tooltip>
                         <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
                             <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />
@@ -257,6 +267,8 @@ export default function MFTracker({ darkMode, setDarkMode }) {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress size={28} /></Box>}>
                     <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
                 </Suspense>
+
+                {/* Holdings are managed on the dedicated /holdings page */}
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {visibleRows.map(r => (
