@@ -12,5 +12,5 @@ applyTo:
 - Keep the default theme light by default in `App.js` and theme configuration.
 - Avoid hardcoded personal values such as user names; use auth-provided data like `user?.name`.
 - Keep the tracker header minimal and focused on user data, not additional market tickers unless explicitly requested.
-- Use the configured backend URL environment variables (`REACT_APP_BACKEND_URL` or `REACT_APP_API_URL`) for API requests.
+- Use the configured backend URL environment variable (`REACT_APP_BACKEND_URL`) for API requests.
 - Preserve the existing MFTracker and SchemeAccordion layout conventions when adding or updating UI, rather than introducing unrelated layout changes.

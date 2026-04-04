@@ -11,7 +11,6 @@ function mask(v) {
 
 // Preferred env names
 const ENV = {
-    API_URL: 'REACT_APP_API_URL',
     RAPIDAPI_KEY: 'REACT_APP_RAPIDAPI_KEY',
     RAPIDAPI_HOST: 'REACT_APP_RAPIDAPI_HOST',
     DATA_ADAPTER: 'REACT_APP_DATA_ADAPTER'
@@ -77,16 +76,6 @@ export function getRapidHost() {
     return 'latest-mutual-fund-nav.p.rapidapi.com';
 }
 
-export function getApiUrl() {
-    try {
-        if (typeof process !== 'undefined' && process.env && process.env[ENV.API_URL]) return String(process.env[ENV.API_URL]).trim();
-    } catch (e) {
-        // ignore
-    }
-    if (typeof window !== 'undefined' && window.__API_URL__) return String(window.__API_URL__).trim();
-    return '';
-}
-
 export function getDataAdapter() {
     try {
         if (typeof process !== 'undefined' && process.env && process.env[ENV.DATA_ADAPTER]) return String(process.env[ENV.DATA_ADAPTER]).trim();
@@ -101,7 +90,6 @@ export function getDataAdapter() {
 export function initRuntimeConfig() {
     try {
         if (typeof window === 'undefined') return;
-        window.__API_URL__ = window.__API_URL__ || (process && process.env && process.env[ENV.API_URL]) || window.__API_URL__ || '';
         window.__RAPIDAPI_KEY__ = window.__RAPIDAPI_KEY__ || (process && process.env && process.env[ENV.RAPIDAPI_KEY]) || window.__RAPIDAPI_KEY__ || '';
         window.__RAPIDAPI_HOST__ = window.__RAPIDAPI_HOST__ || (process && process.env && process.env[ENV.RAPIDAPI_HOST]) || window.__RAPIDAPI_HOST__ || 'latest-mutual-fund-nav.p.rapidapi.com';
         window.__DATA_ADAPTER__ = window.__DATA_ADAPTER__ || (process && process.env && process.env[ENV.DATA_ADAPTER]) || window.__DATA_ADAPTER__ || '';
@@ -114,7 +102,6 @@ export function initRuntimeConfig() {
 export default {
     getRapidKeyAndSource,
     getRapidHost,
-    getApiUrl,
     getDataAdapter,
     initRuntimeConfig
 };
