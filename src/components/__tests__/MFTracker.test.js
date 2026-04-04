@@ -41,7 +41,8 @@ describe('MFTracker', () => {
             return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
         });
 
-        render(<MFTracker darkMode={false} setDarkMode={() => { }} />);
+        const mockUser = { name: 'Test User', email: 'test@example.com' };
+        render(<MFTracker user={mockUser} darkMode={false} setDarkMode={() => { }} />);
 
         // loader should show initially
         expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -50,13 +51,13 @@ describe('MFTracker', () => {
         await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
 
         // Summary header (owner name) should be present
-        expect(screen.getByText(/Parth Dave/i)).toBeInTheDocument();
+        expect(screen.getByText(/Test User/i)).toBeInTheDocument();
 
         // Assert adapter was called once per configured scheme
         expect(fetchSchemeDataUsingAdapter).toHaveBeenCalledTimes(schemes.length);
 
-        // Summary header (owner name) should be present
-        expect(screen.getByText(/Parth Dave/i)).toBeInTheDocument();
+        // Summary header (owner name) should be present after refresh
+        expect(screen.getByText(/Test User/i)).toBeInTheDocument();
 
         // Refresh button toggles load again (smoke test) - the button has label 'Refresh'
         const refreshBtn = screen.getByRole('button', { name: /Refresh/i });

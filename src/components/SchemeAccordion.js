@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Divider from '@mui/material/Divider';
-import { fmtUnit, fmtRoundUp, toTitleCase, monthLabelShort, accentColor, dateShort } from '../utils/formatters';
+import { fmtUnit, fmtRoundUp, toTitleCase, monthLabelShort, accentColor, dateShort, fmtAmount } from '../utils/formatters';
 
 export default function SchemeAccordion({ r, month1Label, month2Label, month3Label }) {
     const pct = (r.hist[0] && r.hist[0].marketValue) ? ((r.prevDelta / r.hist[0].marketValue) * 100) : null;
@@ -31,7 +31,7 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
                 <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '62%' }}>
                         <Typography component="h3" sx={{ fontSize: '0.98rem', fontWeight: 800, color: 'text.primary' }}>{toTitleCase(r.scheme_name)}</Typography>
-                        <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>{r.unit ? `${fmtUnit(r.unit)} units` : ''}</Typography>
+                        <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>{r.unit ? `${fmtUnit(r.unit)} units` : ''} • NAV: ₹{r.nav !== null ? fmtAmount(r.nav) : '-'}</Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right', minWidth: 120 }}>
                         <Typography sx={{ fontWeight: 800, color: 'text.primary' }}>₹{r.marketValue !== null ? fmtRoundUp(r.marketValue) : '-'}</Typography>
@@ -46,6 +46,10 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
             </AccordionSummary>
             <AccordionDetails>
                 <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={3} sx={{ flex: 1 }}>
+                        <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>Latest NAV</Typography>
+                        <Typography noWrap sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.primary' }}>₹{r.nav !== null ? fmtAmount(r.nav) : '-'}</Typography>
+                    </Grid>
                     <Grid item xs={3} sx={{ flex: 1 }}>
                         <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>Invested</Typography>
                         <Typography noWrap sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.primary' }}>₹{fmtRoundUp(r.principal)}</Typography>

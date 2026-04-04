@@ -18,7 +18,7 @@ import BackToTop from './BackToTop';
 import './styles/header.css';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
 
-export default function MFTracker({ darkMode, setDarkMode }) {
+export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -245,7 +245,7 @@ export default function MFTracker({ darkMode, setDarkMode }) {
                 <Box component="header" className="sticky-header" sx={(t) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, color: 'text.primary', background: t.palette.mode === 'dark' ? 'rgba(8,8,12,0.6)' : 'rgba(255,255,255,0.95)', borderBottom: t.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,36,0.04)' })}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <Typography component="h1" sx={{ color: 'text.primary', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Parth Dave</Typography>
+                            <Typography component="h1" sx={{ color: 'text.primary', fontWeight: 900, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>{user?.name || 'User'}</Typography>
                             <Typography component="p" sx={{ color: 'text.secondary', fontWeight: 700, fontSize: { xs: '0.75rem', sm: '0.9rem' }, mt: 0.25 }}>Personal MF Snapshot</Typography>
                         </Box>
                     </Box>

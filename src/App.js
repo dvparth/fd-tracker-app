@@ -25,7 +25,7 @@ import CssBaseline from '@mui/material/CssBaseline';
  * @returns {JSX.Element}
  */
 function App() {
-    const [darkMode, setDarkMode] = useState(true);
+    const [darkMode, setDarkMode] = useState(false);
     const { user, loading, setUser } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -109,7 +109,7 @@ function App() {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/holdings" element={loading ? <div>Loading...</div> : (user ? <HoldingsPage /> : <Navigate to="/login" />)} />
-                    <Route path="/" element={loading ? <div>Loading...</div> : (user ? <MFTracker darkMode={darkMode} setDarkMode={setDarkMode} /> : <Navigate to="/login" />)} />
+                    <Route path="/" element={loading ? <div>Loading...</div> : (user ? <MFTracker user={user} darkMode={darkMode} setDarkMode={setDarkMode} /> : <Navigate to="/login" />)} />
                 </Routes>
             </div>
         </ThemeProvider>
