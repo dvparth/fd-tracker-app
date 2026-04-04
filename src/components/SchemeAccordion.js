@@ -47,10 +47,6 @@ export default function SchemeAccordion({ r, month1Label, month2Label, month3Lab
             <AccordionDetails>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs={3} sx={{ flex: 1 }}>
-                        <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>Latest NAV</Typography>
-                        <Typography noWrap sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.primary' }}>₹{r.nav !== null ? fmtAmount(r.nav) : '-'}</Typography>
-                    </Grid>
-                    <Grid item xs={3} sx={{ flex: 1 }}>
                         <Typography sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>Invested</Typography>
                         <Typography noWrap sx={{ fontWeight: 700, fontSize: '0.9rem', color: 'text.primary' }}>₹{fmtRoundUp(r.principal)}</Typography>
                     </Grid>

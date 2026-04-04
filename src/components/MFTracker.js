@@ -37,12 +37,13 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
     // Adapter selection determined by env/build-time or available adapters
 
     const [manualLoading, setManualLoading] = useState(false);
+
     const load = async () => {
         setLoading(true);
         setError(null);
         try {
             // Load user's tracked holdings and fetch NAVs using adapters. Do not call /schemes here.
-            const backend = process.env.REACT_APP_BACKEND_URL || '';
+            const backend = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || '';
             const holdingsRes = await fetch(`${backend}/user/holdings`, { credentials: 'include' });
             const userHoldings = (await holdingsRes.json().catch(() => ({ holdings: [] }))).holdings || [];
             // Build the tracked list from user holdings; adapter metadata (meta.scheme_name) will be used when available.
