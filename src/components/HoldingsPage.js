@@ -14,8 +14,8 @@ import HoldingForm from './HoldingForm';
 import LoadingButton from './LoadingButton';
 import FeedbackSnackbar from './FeedbackSnackbar';
 import { useNavigate } from 'react-router-dom';
-import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 import { toTitleCase } from '../utils/formatters';
+import { fetchSchemeDataUsingAdapter } from '../adapters/mfAdapters';
 
 export default function HoldingsPage() {
     const [holdings, setHoldings] = useState([]);
@@ -51,13 +51,12 @@ export default function HoldingsPage() {
         try {
             const backend = process.env.REACT_APP_BACKEND_URL || '';
             // first try adapter-based fetch for each unique code
-            const adapterKey = (availableAdapters.includes('hybrid') ? 'hybrid' : (availableAdapters.includes('mfapi') ? 'mfapi' : availableAdapters[0]));
             const uniqueCodes = Array.from(new Set(codes.map(c => Number(c)))).filter(Number.isFinite);
             const map = {};
             // Try fetching via adapter for each code (parallel)
             const promises = uniqueCodes.map(async (code) => {
                 try {
-                    const payload = await fetchSchemeDataUsingAdapter(adapterKey, { scheme_code: code });
+                    const payload = await fetchSchemeDataUsingAdapter({ scheme_code: code });
                     const name = payload && payload.meta && payload.meta.scheme_name ? payload.meta.scheme_name : null;
                     if (name) map[code] = name;
                 } catch (e) {

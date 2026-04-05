@@ -10,8 +10,6 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-// schemes will be loaded from backend /schemes endpoint (fallback to frontend config during migration)
-import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 const SummaryCard = React.lazy(() => import('./SummaryCard'));
 const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
 import { Suspense } from 'react';
@@ -19,6 +17,7 @@ import BackToTop from './BackToTop';
 import './styles/header.css';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
 import { getAIModel } from '../config/runtimeConfig';
+import { fetchSchemeDataUsingAdapter } from '../adapters/mfAdapters';
 
 export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [rows, setRows] = useState([]);
@@ -32,12 +31,7 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [aiSummary, setAiSummary] = useState('');
 
 
-    // Allow overriding the adapter via env var for testing. Prefer 'hybrid' when available so
-    // the RapidAPI latest endpoint is used to augment mfapi historical data.
-    const envAdapter = typeof process !== 'undefined' && process.env && process.env.REACT_APP_DATA_ADAPTER;
-    const dataAdapterKey = envAdapter || (availableAdapters.includes('hybrid') ? 'hybrid' : (availableAdapters.includes('mfapi') ? 'mfapi' : availableAdapters[0]));
-    // debug: report which adapter is selected
-    // Adapter selection determined by env/build-time or available adapters
+    // Adapter selection is now handled by REACT_APP_DATA_ADAPTER env var in mfAdapters.js
 
     const [manualLoading, setManualLoading] = useState(false);
 
@@ -74,7 +68,7 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
             // Build the tracked list from user holdings; adapter metadata (meta.scheme_name) will be used when available.
             const tracked = userHoldings.map(h => ({ scheme_code: h.scheme_code, principal: h.principal || 0, unit: h.unit || 0 }));
             // fetch through adapter(s) to keep MFTracker decoupled from API shape
-            const settled = await Promise.allSettled(tracked.map(s => fetchSchemeDataUsingAdapter(dataAdapterKey, s)));
+            const settled = await Promise.allSettled(tracked.map(s => fetchSchemeDataUsingAdapter(s)));
             const results = settled.map((res, idx) => {
                 const s = tracked[idx];
                 if (res.status === 'fulfilled') {
