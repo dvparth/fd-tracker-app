@@ -50,7 +50,21 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
                 console.log('AI Summary API response:', data);
                 setAiSummary(data.insight || 'No summary available');
             } else {
-                setAiSummary('Failed to load AI summary');
+                // Handle error responses with specific messages
+                const errorData = await response.json().catch(() => ({}));
+                let errorMessage = 'Failed to load AI summary';
+                
+                if (response.status === 402) {
+                    // Credit Depletion
+                    errorMessage = errorData.body?.message || 'Your AI credits have been depleted. Please subscribe to continue using portfolio insights.';
+                } else if (response.status >= 500) {
+                    // Service Unavailable (5xx)
+                    errorMessage = errorData.body?.message || 'The AI service is temporarily unavailable. Please try again in a few moments.';
+                } else if (errorData.body?.message) {
+                    errorMessage = errorData.body.message;
+                }
+                
+                setAiSummary(errorMessage);
             }
         } catch (err) {
             setAiSummary('Error loading AI summary');
