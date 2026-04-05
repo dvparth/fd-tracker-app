@@ -68,12 +68,19 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
             // Build the tracked list from user holdings; adapter metadata (meta.scheme_name) will be used when available.
             const tracked = userHoldings.map(h => ({ scheme_code: h.scheme_code, principal: h.principal || 0, unit: h.unit || 0 }));
             // fetch through adapter(s) to keep MFTracker decoupled from API shape
-            const settled = await Promise.allSettled(tracked.map(s => fetchSchemeDataUsingAdapter(s)));
-            const results = settled.map((res, idx) => {
-                const s = tracked[idx];
-                if (res.status === 'fulfilled') {
+            const results = await fetchSchemeDataUsingAdapter(tracked);
+            // Create a lookup map for results by schemeCode (results may be in different order)
+            const resultsMap = {};
+            results.forEach(result => {
+                if (result && result.schemeCode) {
+                    resultsMap[result.schemeCode] = result;
+                }
+            });
+            const processedResults = tracked.map((s) => {
+                const result = resultsMap[s.scheme_code];
+                if (result && !result.error) {
                     // adapter guarantees canonical shape: { entries: [{date, nav}], meta: { scheme_name } }
-                    const payload = res.value || { entries: [], meta: { scheme_name: '' } };
+                    const payload = result.data || { entries: [], meta: { scheme_name: '' } };
                     const entries = Array.isArray(payload.entries) ? payload.entries : [];
                     // robustly parse NAVs and convert non-finite values to null to avoid NaN propagation
                     let nav0 = entries[0] && entries[0].nav ? Number.parseFloat(entries[0].nav) : null;
@@ -118,7 +125,7 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
                     latestDate: null,
                 };
             });
-            setRows(results);
+            setRows(processedResults);
             setLastUpdated(new Date());
         } catch (err) {
             setError(err.message || 'Failed to load');

@@ -52,18 +52,22 @@ export default function HoldingsPage() {
             const backend = process.env.REACT_APP_BACKEND_URL || '';
             // first try adapter-based fetch for each unique code
             const uniqueCodes = Array.from(new Set(codes.map(c => Number(c)))).filter(Number.isFinite);
+            const schemeObjects = uniqueCodes.map(code => ({ scheme_code: code }));
             const map = {};
-            // Try fetching via adapter for each code (parallel)
-            const promises = uniqueCodes.map(async (code) => {
+
+            if (schemeObjects.length > 0) {
                 try {
-                    const payload = await fetchSchemeDataUsingAdapter({ scheme_code: code });
-                    const name = payload && payload.meta && payload.meta.scheme_name ? payload.meta.scheme_name : null;
-                    if (name) map[code] = name;
+                    const results = await fetchSchemeDataUsingAdapter(schemeObjects);
+                    results.forEach(result => {
+                        if (result && !result.error && result.data) {
+                            const name = result.data.meta && result.data.meta.scheme_name ? result.data.meta.scheme_name : null;
+                            if (name) map[result.schemeCode] = name;
+                        }
+                    });
                 } catch (e) {
-                    // ignore per-code failures
+                    // ignore batch failures, will fall back to individual calls or default labels
                 }
-            });
-            await Promise.all(promises);
+            }
 
             // For any codes missing a name, we intentionally do not call the backend /schemes endpoint.
             // Instead, the UI will fall back to a simple label `Code <scheme_code>` when adapter metadata is not available.
