@@ -8,8 +8,9 @@ import Tooltip from '@mui/material/Tooltip';
 import Switch from '@mui/material/Switch';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 // schemes will be loaded from backend /schemes endpoint (fallback to frontend config during migration)
-import { useCallback } from 'react';
 import { fetchSchemeDataUsingAdapter, availableAdapters } from '../adapters/mfAdapters';
 const SummaryCard = React.lazy(() => import('./SummaryCard'));
 const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
@@ -17,6 +18,7 @@ import { Suspense } from 'react';
 import BackToTop from './BackToTop';
 import './styles/header.css';
 import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
+import { getAIModel } from '../config/runtimeConfig';
 
 export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [rows, setRows] = useState([]);
@@ -27,6 +29,7 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [visibleCount, setVisibleCount] = useState(8);
     // UI state for scrolling helpers (declare before any early returns)
     const topRef = useRef(null);
+    const [aiSummary, setAiSummary] = useState('');
 
 
     // Allow overriding the adapter via env var for testing. Prefer 'hybrid' when available so
@@ -37,6 +40,28 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
     // Adapter selection determined by env/build-time or available adapters
 
     const [manualLoading, setManualLoading] = useState(false);
+
+    const fetchAISummary = async (portfolioState) => {
+        try {
+            const backend = process.env.REACT_APP_BACKEND_URL || '';
+            const model = getAIModel();
+            const response = await fetch(`${backend}/api/portfolioInsight?model=${encodeURIComponent(model)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(portfolioState)
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.log('AI Summary API response:', data);
+                setAiSummary(data.insight || 'No summary available');
+            } else {
+                setAiSummary('Failed to load AI summary');
+            }
+        } catch (err) {
+            setAiSummary('Error loading AI summary');
+        }
+    };
 
     const load = async () => {
         setLoading(true);
@@ -107,6 +132,75 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
             setLoading(false);
         }
     };
+
+    // Fetch AI summary after data is loaded
+    useEffect(() => {
+        if (!loading && !error && rows.length > 0) {
+            // Compute portfolio state here since it's after data load
+            const latestDate = rows.reduce((acc, r) => r.latestDate && (!acc || r.latestDate > acc) ? r.latestDate : acc, null);
+            let monthTargets = [null, null, null];
+            if (latestDate) {
+                const base = parseDMY(latestDate);
+                if (base) {
+                    monthTargets = [1, 2, 3].map(i => {
+                        const d = new Date(base.getTime());
+                        d.setMonth(d.getMonth() - i);
+                        return d;
+                    });
+                }
+            }
+            const rowsWithMonths = rows.map(r => {
+                const entries = r.entries || [];
+                const months = monthTargets.map(t => {
+                    if (!t) return { date: null, marketValue: null };
+                    const found = findNearestEntry(entries, t);
+                    if (!found || (found.nav === undefined || found.nav === null)) return { date: null, marketValue: null };
+                    const nav = parseFloat(found.nav);
+                    const mv = (Number.isFinite(nav) && r.unit) ? (nav * r.unit) : null;
+                    return { date: found.date, marketValue: mv };
+                });
+                return { ...r, months };
+            });
+            const totals = rowsWithMonths.reduce((acc, r) => {
+                acc.principal += Number(r.principal || 0);
+                acc.marketValue += Number(r.marketValue || 0);
+                acc.profit += Number(r.profit || 0);
+                acc.prevDelta += Number(r.prevDelta || 0);
+                acc.month1 += Number((r.months && r.months[0] && r.months[0].marketValue) || 0);
+                acc.month2 += Number((r.months && r.months[1] && r.months[1].marketValue) || 0);
+                acc.month3 += Number((r.months && r.months[2] && r.months[2].marketValue) || 0);
+                return acc;
+            }, { principal: 0, marketValue: 0, profit: 0, prevDelta: 0, month1: 0, month2: 0, month3: 0 });
+            const sortedRows = rowsWithMonths.slice().sort((a, b) => {
+                const av = Number.isFinite(a.marketValue) ? a.marketValue : -Infinity;
+                const bv = Number.isFinite(b.marketValue) ? b.marketValue : -Infinity;
+                return bv - av;
+            });
+            const portfolioState = {
+                portfolio: {
+                    currentValue: Number.isFinite(totals.marketValue) ? totals.marketValue : null,
+                    investedAmount: Number.isFinite(totals.principal) ? totals.principal : null,
+                    totalProfitLoss: Number.isFinite(totals.profit) ? totals.profit : null,
+                    oneDayChange: Number.isFinite(totals.prevDelta) ? totals.prevDelta : null,
+                    oneDayChangePct: totals.month1 ? (totals.prevDelta / totals.month1) : null,
+                    latestDate,
+                },
+                schemes: sortedRows.map((r) => ({
+                    scheme_code: r.scheme_code,
+                    scheme_name: r.scheme_name,
+                    principal: Number.isFinite(r.principal) ? r.principal : null,
+                    unit: Number.isFinite(r.unit) ? r.unit : null,
+                    currentNav: Number.isFinite(r.nav) ? r.nav : null,
+                    marketValue: Number.isFinite(r.marketValue) ? r.marketValue : null,
+                    profit: Number.isFinite(r.profit) ? r.profit : null,
+                    oneDayChange: Number.isFinite(r.prevDelta) ? r.prevDelta : null,
+                    oneDayChangePct: (r.hist && r.hist[0] && Number.isFinite(r.hist[0].marketValue) && Number.isFinite(r.prevDelta)) ? (r.prevDelta / r.hist[0].marketValue) : null,
+                    latestDate: r.latestDate || null,
+                }))
+            };
+            fetchAISummary(portfolioState);
+        }
+    }, [loading, error, rows]);
 
     // Schedule the expensive data fetch during idle time so the browser can
     // paint the initial UI faster. Falls back to a short timeout if
@@ -224,6 +318,33 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
         return bv - av;
     });
 
+    const handleExportState = () => {
+        const portfolioState = {
+            portfolio: {
+                currentValue: Number.isFinite(totals.marketValue) ? totals.marketValue : null,
+                investedAmount: Number.isFinite(totals.principal) ? totals.principal : null,
+                totalProfitLoss: Number.isFinite(totals.profit) ? totals.profit : null,
+                oneDayChange: Number.isFinite(totals.prevDelta) ? totals.prevDelta : null,
+                oneDayChangePct: totals.month1 ? (totals.prevDelta / totals.month1) : null,
+                latestDate,
+            },
+            schemes: sortedRows.map((r) => ({
+                scheme_code: r.scheme_code,
+                scheme_name: r.scheme_name,
+                principal: Number.isFinite(r.principal) ? r.principal : null,
+                unit: Number.isFinite(r.unit) ? r.unit : null,
+                currentNav: Number.isFinite(r.nav) ? r.nav : null,
+                marketValue: Number.isFinite(r.marketValue) ? r.marketValue : null,
+                profit: Number.isFinite(r.profit) ? r.profit : null,
+                oneDayChange: Number.isFinite(r.prevDelta) ? r.prevDelta : null,
+                oneDayChangePct: (r.hist && r.hist[0] && Number.isFinite(r.hist[0].marketValue) && Number.isFinite(r.prevDelta)) ? (r.prevDelta / r.hist[0].marketValue) : null,
+                latestDate: r.latestDate || null,
+            }))
+        };
+        console.log('Portfolio export state:', portfolioState);
+        console.log(JSON.stringify(portfolioState, null, 2));
+    };
+
     // Progressive rendering: only render a subset of accordions initially to
     // reduce JS work and improve Total Blocking Time. User can expand to load more.
     const visibleRows = sortedRows.slice(0, visibleCount);
@@ -253,11 +374,11 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
 
                     {/* navigation links removed per design request */}
 
-                    <Box role="group" aria-label="controls">
+                    <Box role="group" aria-label="controls" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <Tooltip title="Refresh">
                             <LoadingButton aria-label="Refresh data" onClick={() => { setManualLoading(true); load().finally(() => setManualLoading(false)); }} startIcon={<RefreshIcon />} size="small" loading={manualLoading}>Refresh</LoadingButton>
                         </Tooltip>
-                        <Box sx={{ ml: 1, display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', zIndex: 20 }}>
                             <Switch checked={!!darkMode} onChange={(e, checked) => setDarkMode && setDarkMode(checked)} inputProps={{ 'aria-label': 'toggle dark mode' }} />
                         </Box>
                     </Box>
@@ -268,6 +389,16 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
                 <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress size={28} /></Box>}>
                     <SummaryCard id="summary-card" totals={totals} latestDate={latestDate} month1Label={month1Label} month2Label={month2Label} month3Label={month3Label} />
                 </Suspense>
+
+                {/* AI Summary Section */}
+                <Box sx={{ p: '2px', background: 'linear-gradient(135deg, #ff0000 0%, #ff7f00 14%, #ffff00 28%, #00ff00 42%, #0000ff 57%, #4b0082 71%, #9400d3 85%)', borderRadius: 2, mb: 1.25, boxShadow: '0 0 10px rgba(255,0,0,0.6), 0 0 15px rgba(255,127,0,0.5), 0 0 20px rgba(255,255,0,0.4), 0 0 25px rgba(0,255,0,0.3), 0 0 30px rgba(0,0,255,0.2)' }}>
+                    <Card elevation={4} sx={(theme) => ({ background: theme.palette.mode === 'dark' ? theme.palette.background.paper : '#fff', boxShadow: theme.palette.mode === 'dark' ? '0 6px 18px rgba(0,0,0,0.6)' : '0 6px 18px rgba(31,42,68,0.05)', border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.03)' : '1px solid rgba(255,255,255,0.12)' })}>
+                        <CardContent sx={{ py: 1, px: { xs: 1.25, sm: 2 } }}>
+                            <Typography component="h2" sx={{ fontSize: { xs: '0.95rem', sm: '1.1rem' }, color: 'text.primary', fontWeight: 900, mb: 1 }}>AI Summary</Typography>
+                            <Typography sx={{ fontSize: '0.9rem', color: 'text.primary', lineHeight: 1.5 }}>{aiSummary || 'Loading AI summary...'}</Typography>
+                        </CardContent>
+                    </Card>
+                </Box>
 
                 {/* Holdings are managed on the dedicated /holdings page */}
 
