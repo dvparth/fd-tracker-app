@@ -39,11 +39,20 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
         try {
             const backend = process.env.REACT_APP_BACKEND_URL || '';
             const model = getAIModel();
-            const response = await fetch(`${backend}/api/portfolioInsight?model=${encodeURIComponent(model)}`, {
+            const requestBody = {
+                portfolio: portfolioState,
+                provider: "github",
+                model: "gpt-4o-mini",
+                fallback: {
+                    provider: "huggingface",
+                    model: model
+                }
+            };
+            const response = await fetch(`${backend}/api/portfolioInsight`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify(portfolioState)
+                body: JSON.stringify(requestBody)
             });
             if (response.ok) {
                 const data = await response.json();
