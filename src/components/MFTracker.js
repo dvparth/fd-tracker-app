@@ -10,20 +10,20 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-const SummaryCard = React.lazy(() => import('./SummaryCard'));
-const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
 import { Suspense } from 'react';
 import BackToTop from './BackToTop';
 import './styles/header.css';
-import { parseDMY, formatDMY, findNearestEntry, fmtRoundUp, profitColor, dateShort, monthLabelShort } from '../utils/formatters';
+import { parseDMY, formatDMY, findNearestEntry, monthLabelShort } from '../utils/formatters';
 import { getAIModel } from '../config/runtimeConfig';
 import { fetchSchemeDataUsingAdapter } from '../adapters/mfAdapters';
+
+const SummaryCard = React.lazy(() => import('./SummaryCard'));
+const SchemeAccordion = React.lazy(() => import('./SchemeAccordion'));
 
 export default function MFTracker({ user, darkMode, setDarkMode }) {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [lastUpdated, setLastUpdated] = useState(null);
     // Visible count for progressive rendering (declare with other hooks)
     const [visibleCount, setVisibleCount] = useState(8);
     // UI state for scrolling helpers (declare before any early returns)
@@ -149,7 +149,6 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
                 };
             });
             setRows(processedResults);
-            setLastUpdated(new Date());
         } catch (err) {
             setError(err.message || 'Failed to load');
         } finally {
@@ -249,15 +248,6 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
 
     // ...existing code...
 
-    // smooth scroll helper
-    const smoothScrollTo = (targetId) => {
-        // close menu not needed (hamburger removed)
-        const el = document.getElementById(targetId);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
-
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -326,48 +316,12 @@ export default function MFTracker({ user, darkMode, setDarkMode }) {
         return acc;
     }, { principal: 0, marketValue: 0, profit: 0, prevDelta: 0, month1: 0, month2: 0, month3: 0 });
 
-    const totalsProfitPct = totals.principal ? (totals.profit / totals.principal) * 100 : null;
-    const totalsPrevDeltaPct = totals.month1 ? (totals.prevDelta / totals.month1) * 100 : null;
-
-    // color tokens for the 1 Day change chip
-    const changeVal = totals.prevDelta;
-    const changeBg = changeVal > 0 ? 'rgba(0,184,148,0.08)' : changeVal < 0 ? 'rgba(255,107,107,0.08)' : '#ffffff';
-    const changeBorder = changeVal > 0 ? '#00b894' : changeVal < 0 ? '#ff6b6b' : '#e6eef6';
-    const changeText = profitColor(changeVal);
-
     // sort rows by marketValue descending for display (null/invalid marketValues go last)
     const sortedRows = rowsWithMonths.slice().sort((a, b) => {
         const av = Number.isFinite(a.marketValue) ? a.marketValue : -Infinity;
         const bv = Number.isFinite(b.marketValue) ? b.marketValue : -Infinity;
         return bv - av;
     });
-
-    const handleExportState = () => {
-        const portfolioState = {
-            portfolio: {
-                currentValue: Number.isFinite(totals.marketValue) ? totals.marketValue : null,
-                investedAmount: Number.isFinite(totals.principal) ? totals.principal : null,
-                totalProfitLoss: Number.isFinite(totals.profit) ? totals.profit : null,
-                oneDayChange: Number.isFinite(totals.prevDelta) ? totals.prevDelta : null,
-                oneDayChangePct: totals.month1 ? (totals.prevDelta / totals.month1) : null,
-                latestDate,
-            },
-            schemes: sortedRows.map((r) => ({
-                scheme_code: r.scheme_code,
-                scheme_name: r.scheme_name,
-                principal: Number.isFinite(r.principal) ? r.principal : null,
-                unit: Number.isFinite(r.unit) ? r.unit : null,
-                currentNav: Number.isFinite(r.nav) ? r.nav : null,
-                marketValue: Number.isFinite(r.marketValue) ? r.marketValue : null,
-                profit: Number.isFinite(r.profit) ? r.profit : null,
-                oneDayChange: Number.isFinite(r.prevDelta) ? r.prevDelta : null,
-                oneDayChangePct: (r.hist && r.hist[0] && Number.isFinite(r.hist[0].marketValue) && Number.isFinite(r.prevDelta)) ? (r.prevDelta / r.hist[0].marketValue) : null,
-                latestDate: r.latestDate || null,
-            }))
-        };
-        console.log('Portfolio export state:', portfolioState);
-        console.log(JSON.stringify(portfolioState, null, 2));
-    };
 
     // Progressive rendering: only render a subset of accordions initially to
     // reduce JS work and improve Total Blocking Time. User can expand to load more.

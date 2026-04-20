@@ -40,9 +40,6 @@ jest.mock('../../adapters/mfAdapters', () => ({
     })
 }));
 
-// import the mocked function to assert call counts
-const { fetchSchemeDataUsingAdapter } = require('../../adapters/mfAdapters');
-
 describe('MFTracker', () => {
     test('renders summary and scheme list after load', async () => {
         // Mock global fetch for /schemes and /user/holdings endpoints

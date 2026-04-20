@@ -18,7 +18,6 @@ export default function HoldingForm({ onSaved, editing = null, onCancel = null }
     const [unit, setUnit] = useState('');
     const [loading, setLoading] = useState(false);
     const [snack, setSnack] = useState(null);
-    const backend = process.env.REACT_APP_BACKEND_URL || '';
 
     // When editing prop is provided, populate the form fields
     useEffect(() => {

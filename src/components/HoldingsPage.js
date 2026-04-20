@@ -4,14 +4,11 @@ import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import TextField from '@mui/material/TextField';
 import HoldingForm from './HoldingForm';
-import LoadingButton from './LoadingButton';
 import FeedbackSnackbar from './FeedbackSnackbar';
 import { useNavigate } from 'react-router-dom';
 import { toTitleCase } from '../utils/formatters';
@@ -23,11 +20,9 @@ export default function HoldingsPage() {
     const [schemesMap, setSchemesMap] = useState({});
     const navigate = useNavigate();
 
-    // Runtime-safe fallbacks: if LoadingButton or FeedbackSnackbar failed to import
-    // (which can cause React to throw "Element type is invalid"), provide simple
-    // stand-ins and log a warning. This keeps the page renderable while we debug.
-    const SafeLoadingButton = (typeof LoadingButton === 'undefined' || LoadingButton === null) ?
-        (({ children, ...p }) => <Button {...p}>{children}</Button>) : LoadingButton;
+    // Runtime-safe fallback: if FeedbackSnackbar failed to import
+    // (which can cause React to throw "Element type is invalid"), provide a simple
+    // stand-in. This keeps the page renderable while we debug.
     const SafeFeedbackSnackbar = (typeof FeedbackSnackbar === 'undefined' || FeedbackSnackbar === null) ?
         (({ open, message }) => open ? <div style={{ position: 'fixed', bottom: 8, left: '50%', transform: 'translateX(-50%)', background: '#333', color: '#fff', padding: '8px 12px', borderRadius: 6 }}>{message}</div> : null) : FeedbackSnackbar;
 
@@ -37,6 +32,7 @@ export default function HoldingsPage() {
             if (res.ok) {
                 const json = await res.json();
                 setHoldings(json.holdings || []);
+                console.log("holdings loaded", json)
             }
         } catch (e) {
             // ignore
@@ -49,7 +45,6 @@ export default function HoldingsPage() {
     // Load scheme metadata to show scheme names. Prefer adapter (hybrid/mfapi) to fetch canonical meta (which may use RapidAPI)
     const loadSchemes = async (codes) => {
         try {
-            const backend = process.env.REACT_APP_BACKEND_URL || '';
             // first try adapter-based fetch for each unique code
             const uniqueCodes = Array.from(new Set(codes.map(c => Number(c)))).filter(Number.isFinite);
             const schemeObjects = uniqueCodes.map(code => ({ scheme_code: code }));
@@ -103,29 +98,6 @@ export default function HoldingsPage() {
     const startEdit = (h) => {
         // Initialize editable fields as strings so TextField (controlled) shows values
         setEditing({ ...h, principal: h.principal !== undefined && h.principal !== null ? String(h.principal) : '', unit: h.unit !== undefined && h.unit !== null ? String(h.unit) : '' });
-    };
-
-    const saveEdit = async () => {
-        if (!editing) return;
-        setLoading(true);
-        try {
-            // parse numeric values from editing strings
-            const principalNum = editing.principal === '' ? 0 : Number.parseFloat(String(editing.principal).replace(/[,₹\s]/g, '')) || 0;
-            const unitNum = editing.unit === '' ? 0 : Number.parseFloat(String(editing.unit).replace(/[,\s]/g, '')) || 0;
-            const res = await fetch((process.env.REACT_APP_BACKEND_URL || '') + '/user/holdings/' + editing.scheme_code, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ principal: principalNum, unit: unitNum }) });
-            if (res.ok) {
-                const json = await res.json();
-                setHoldings(json.holdings || []);
-                setEditing(null);
-                setSnack({ severity: 'success', message: 'Holding updated' });
-            } else {
-                setSnack({ severity: 'error', message: 'Update failed' });
-            }
-        } catch (e) {
-            setSnack({ severity: 'error', message: `Update failed: ${e.message}` });
-        } finally {
-            setLoading(false);
-        }
     };
 
     return (

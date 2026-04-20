@@ -3,12 +3,6 @@
 // also checks common runtime fallbacks (window globals, URL param, localStorage, meta tag).
 // Export helpers so other modules can rely on a single source of truth.
 
-function mask(v) {
-    if (!v) return '(<empty>)';
-    const s = String(v);
-    return s.length > 4 ? `****${s.slice(-4)}` : '****';
-}
-
 // Preferred env names
 const ENV = {
     RAPIDAPI_KEY: 'REACT_APP_RAPIDAPI_KEY',
@@ -111,9 +105,11 @@ export function initRuntimeConfig() {
     }
 }
 
-export default {
+const runtimeConfig = {
     getRapidKeyAndSource,
     getRapidHost,
     getDataAdapter,
     initRuntimeConfig
 };
+
+export default runtimeConfig;
