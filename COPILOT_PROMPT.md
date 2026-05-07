@@ -1,52 +1,42 @@
-FD Tracker App — Copilot prompt (concise)
+MF Tracker App - Copilot prompt (concise)
 
-Use this short, self-contained prompt when you need to recreate this entire application, implement features, or ask a coding assistant for comprehensive edits. Keep it synced with the project when data shapes, routes, or deployment targets change.
+Use this short, self-contained prompt when you need to recreate this application, implement features, or ask a coding assistant for comprehensive edits. Keep it synced with the project when data shapes, routes, or deployment targets change.
 
 Project summary
 
-- Full-stack single-repo app: React frontend (CRA) and Express backend (Node.js + Mongoose).
-- Purpose: Allow authenticated users (Google OAuth) to track mutual fund holdings (schemes identified by numeric scheme_code). Each user stores their own holdings in MongoDB.
-- Auth: Server-side Google OAuth; server signs a JWT and sets an HttpOnly cookie `fd_auth`. Frontend uses fetch with credentials: 'include' to call protected endpoints.
-- Adapters: NAV/scheme metadata lookups are isolated in `frontend/src/adapters/mfAdapters.js`. Adapters must return canonical shape: `{ entries: [{ date, nav }], meta: { scheme_name, scheme_code? } }`.
+- Full-stack app with a React frontend (CRA) and Express backend (Node.js + Mongoose).
+- Purpose: Allow authenticated users (Google OAuth) to track mutual fund holdings by numeric `scheme_code`. Each user stores their own holdings in MongoDB.
+- Auth: Server-side Google OAuth; server signs a JWT and sets an HttpOnly cookie `mf_auth`. Frontend uses `fetch` with `credentials: 'include'` to call protected endpoints.
+- Adapters: NAV/scheme metadata lookups are isolated in `src/adapters/mfAdapters.js` on the frontend and `adapters/mfAdapter.js` on the backend. Adapters return canonical shape: `{ entries: [{ date, nav }], meta: { scheme_name } }`.
 
 Key files and contracts
 
-- backend/server.js — express bootstrap, CORS configuration, route registration
-- backend/routes/auth.js — OAuth callbacks and `/auth/me`
-- backend/routes/userHoldings.js — authenticated CRUD for holdings
-- backend/models/User.js — User schema includes `holdings: [{ scheme_code, principal, unit, addedAt }]`
-- frontend/src/App.js — routes, header, navigation
-- frontend/src/components/HoldingsPage.js — fetches `/user/holdings`, and supports add/edit/delete
-- frontend/src/components/HoldingForm.js — freeSolo Autocomplete; accepts numeric scheme codes or search; posts to `/user/holdings`
-- frontend/src/adapters/mfAdapters.js — adapters for external NAV APIs; prefer batching and safe fallbacks
-- frontend/src/utils/formatters.js — shared display functions (e.g., `toTitleCase`)
+- `fdtracker/server.js` - Express bootstrap, CORS configuration, route registration
+- `fdtracker/routes/auth.js` - OAuth callbacks and `/auth/me`
+- `fdtracker/routes/userHoldings.js` - authenticated CRUD for holdings
+- `fdtracker/models/User.js` - User schema includes `holdings: [{ scheme_code, principal, unit, addedAt }]`
+- `fd-tracker-app/src/App.js` - routes, header, navigation
+- `fd-tracker-app/src/components/MFTracker.js` - portfolio snapshot, NAV loading, AI summary
+- `fd-tracker-app/src/components/HoldingsPage.js` - fetches `/user/holdings` and supports add/edit/delete
+- `fd-tracker-app/src/components/HoldingForm.js` - accepts numeric scheme codes and posts to `/user/holdings`
+- `fd-tracker-app/src/adapters/mfAdapters.js` - frontend adapter for backend NAV APIs
+- `fd-tracker-app/src/utils/formatters.js` - shared display functions
 
 Runtime env / deploy notes
 
-- Backend needs: MONGO_URI, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-- Frontend needs: REACT_APP_BACKEND_URL set to backend origin
-- Deploy targets: frontend (Netlify), backend (Render or similar). Backend must set `trust proxy` when behind a proxy so cookies are set with correct sameSite/secure flags.
-- CORS: backend allows frontend origin(s) and Netlify deploy wildcard suffixes. Cookies use SameSite=None and Secure in production.
+- Backend needs: `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FRONTEND_URL`
+- Frontend needs: `REACT_APP_BACKEND_URL` set to backend origin
+- Optional AI/data providers: `RAPIDAPI_KEY`, `RAPIDAPI_HOST`, `GITHUB_TOKEN`, `OPENAI_API_KEY`, `HUGGINGFACE_API_KEY`
+- Deploy targets: frontend on Netlify, backend on Render or similar. Backend sets `trust proxy` in production so secure cookies work behind a proxy.
+- CORS: backend allows configured frontend origin(s) and Netlify deploy wildcard suffixes. Cookies use SameSite=None and Secure in production.
 
-Developer tasks (common)
+Common tasks
 
-- To add adapter for a new NAV API:
+- To add a NAV adapter, add or update logic in the backend adapter and make sure the frontend receives canonical `{ entries, meta }` payloads.
+- To debug auth, check `mf_auth` cookie is present in the browser and `/auth/me` returns 200.
+- To migrate scheme metadata from JSON to DB, use `fdtracker/migrations/importSchemesFromJson.js`.
 
-  - Add a function in `frontend/src/adapters/mfAdapters.js` that returns the canonical payload shape.
-  - Update any UI code that displays fields from meta.
-  - Add unit tests mocking network calls.
-
-- To debug auth:
-
-  - Check `fd_auth` cookie is present in browser (HttpOnly) and `/auth/me` returns 200.
-  - Ensure JWT_SECRET matches server config used to sign cookie.
-
-- To migrate scheme metadata from JSON to DB:
-  - Use the migration helper at `backend/migrations/importSchemesFromJson.js` to import any local `frontend/src/config/schemes.json` fixture into the DB. The runtime app no longer reads `schemes.json` directly; `/schemes` is DB-backed.
-
-Edge cases & assumptions
+Edge cases and assumptions
 
 - Adapters may return partial data. UI should handle missing `nav` values or missing `scheme_name` gracefully.
-- The app allows free-form numeric scheme codes via `HoldingForm` — not all codes will have lookup metadata; the app stores the code and allows the user to view holdings regardless.
-
-If you need the full repository context to regenerate the project, include these files and the `frontend/COPILOT_PROMPT.md` to provide the assistant with the current architecture and contracts.
+- The app allows free-form numeric scheme codes via `HoldingForm`; not all codes will have lookup metadata.

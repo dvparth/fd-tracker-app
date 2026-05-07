@@ -9,11 +9,11 @@ Environment variable (frontend `.env`):
 Routes used:
 
 - `GET ${REACT_APP_BACKEND_URL}/auth/google` - start Google OAuth
-- `GET ${REACT_APP_BACKEND_URL}/auth/github` - start GitHub OAuth
 - `GET ${REACT_APP_BACKEND_URL}/auth/me` - returns `{ authenticated: true, user: { id, name, email } }` when logged in (cookie)
 - `POST ${REACT_APP_BACKEND_URL}/auth/logout` - clears auth cookie
 
 Notes:
 
 - Cookies are used with `credentials: 'include'` so the backend must allow CORS with credentials if on different origin.
+- The backend stores the JWT in an HttpOnly `mf_auth` cookie.
 - Client secrets must never be included in the frontend.

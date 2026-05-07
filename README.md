@@ -1,95 +1,76 @@
-# FD Tracker App
+# MF Tracker App
 
-Lightweight React + Node app to track Mutual Fund and FD holdings. This repository contains a frontend (CRA) and a backend (Express + Mongoose).
+Personal mutual fund snapshot app with a React frontend and an Express/Mongoose backend.
 
-Structure
+The app lets authenticated users manage mutual fund holdings by scheme code, fetches NAV history from external mutual fund data providers, computes portfolio totals, and generates a short AI portfolio insight.
 
-- backend/: Express API and Mongoose models
-- frontend/: React app (Create React App style)
+## Project Structure
 
-Quick start (frontend)
+- `fd-tracker-app/` - React frontend built with Create React App and MUI
+- `fdtracker/` - Express API backed by MongoDB
 
-Prerequisites: Node.js >= 16, npm
+The folder names are kept as-is to avoid breaking local paths, but the runtime app and package metadata now use MF Tracker naming.
 
-Install and run (frontend):
+## Frontend
 
 ```powershell
-cd frontend
+cd C:\Study\MFSnapshot\fd-tracker-app
+$env:REACT_APP_BACKEND_URL = "http://localhost:5000"
 npm install
 npm start
 ```
 
-Run frontend tests
-
-```powershell
-cd frontend
-npm test -- --watchAll=false
-```
-
-Rebuild production bundle
-
-```powershell
-cd frontend
-npm run build
-```
-
-Cleaning up Redux (already removed from source)
-
-If you previously used redux and want to clean installed packages and lockfile:
-
-```powershell
-cd frontend
-npm uninstall react-redux @reduxjs/toolkit
-Remove-Item -Force package-lock.json
-Remove-Item -Recurse -Force node_modules
-npm install
-```
-
-Notes on deposit feature removal
-
-- The frontend source has been stripped of deposit UI. If you want to remove backend endpoints for deposits, delete:
-  - `backend/routes/deposits.js`
-  - `backend/models/Deposit.js`
-  - `backend/importData.js`
-    and remove corresponding `require`/`app.use` lines from `backend/server.js`.
-
-Contact
-
-````markdown
-# FD Tracker App (frontend)
-
-This folder contains the Create-React-App frontend for the FD Tracker application.
-
-Quick start
-
-```powershell
-cd frontend
-npm install
-# in PowerShell you can set the backend url env and start
-$env:REACT_APP_BACKEND_URL = "http://localhost:5000"; npm start
-```
-
-Testing
-
-```powershell
-npm test -- --watchAll=false
-```
-
-Build (production)
+Useful scripts:
 
 ```powershell
 npm run build
+npm run test:ci
 ```
 
-Regeneration / Copilot helper
+Key files:
 
-- This frontend contains a concise regeneration prompt at `frontend/COPILOT_PROMPT.md`. Use it when you need to recreate the app or provide a full-context prompt to an LLM-based assistant. Keep the file up to date when you change routes, API contracts, or adapter shapes.
+- `src/App.js` - app shell, routes, auth-gated pages
+- `src/auth/useAuth.js` - current-user lookup through `/auth/me`
+- `src/components/MFTracker.js` - portfolio snapshot, NAV loading, AI summary
+- `src/components/HoldingsPage.js` - holdings management
+- `src/adapters/mfAdapters.js` - frontend API adapter for MF NAV data
 
-Where to look
+## Backend
 
-- `src/adapters/mfAdapters.js` — adapters and network logic
-- `src/components/HoldingsPage.js` — holdings management UI
-- `src/components/HoldingForm.js` — holding add/edit form
+```powershell
+cd C:\Study\MFSnapshot\fdtracker
+npm install
+npm run dev
+```
 
-Maintainer: Parth Dave
-````
+Required backend environment:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `FRONTEND_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+Optional backend environment:
+
+- `GOOGLE_CALLBACK`
+- `RAPIDAPI_KEY`
+- `RAPIDAPI_HOST`
+- `GITHUB_TOKEN`
+- `OPENAI_API_KEY`
+- `HUGGINGFACE_API_KEY`
+
+Main API routes:
+
+- `/auth` - Google OAuth, logout, current user
+- `/user/holdings` - authenticated holdings CRUD
+- `/schemes` - DB-backed scheme metadata
+- `/api/mf` - mutual fund NAV lookup
+- `/api/portfolioInsight` - AI portfolio summary
+- `/api/llm` - direct LLM chat endpoint
+
+## Notes
+
+- The legacy fixed-deposit API/model/import script has been removed because the current product is a mutual fund tracker.
+- Auth uses an HttpOnly `mf_auth` cookie.
+- The runtime app no longer reads `src/config/schemes.json` directly; `/schemes` is DB-backed.
